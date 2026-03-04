@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Science Olympiad Team Manager - Bishop England</title>
+<style>
+/* ===== CSS RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --be-navy: #1a2744;
+  --be-gold: #c9a227;
+  --be-gold-light: #e6c94a;
+  --be-white: #ffffff;
+  --be-gray: #f4f5f7;
+  --be-gray-dark: #6b7280;
+  --be-border: #e5e7eb;
+  --be-success: #10b981;
+  --be-danger: #ef4444;
+  --be-info: #3b82f6;
+  --be-warning: #f59e0b;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow: 0 2px 8px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  --radius: 10px;
+  --radius-lg: 16px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--be-gray);
+  color: #1f2937;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ===== HEADER ===== */
+.app-header {
+  background: linear-gradient(135deg, var(--be-navy) 0%, #2a3f6a 100%);
+  color: var(--be-white);
+  padding: 0;
+  box-shadow: var(--shadow-lg);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 12px 24px;
+  gap: 16px;
+}
+
+.header-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--be-gold);
+  background: white;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.header-text h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.header-text p {
+  font-size: 0.82rem;
+  opacity: 0.85;
+  color: var(--be-gold-light);
+}
+
+.header-nav {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+
+.nav-btn {
+  background: transparent;
+  color: rgba(255,255,255,0.75);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.nav-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.nav-btn.active { background: rgba(201,162,39,0.2); color: var(--be-gold-light); }
+
+/* ===== MAIN LAYOUT ===== */
+.app-main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.page { display: none; }
+.page.active { display: block; }
+
+/* ===== CARDS ===== */
+.card {
+  background: var(--be-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--be-navy);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ===== DASHBOARD ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--be-white);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  border-left: 4px solid var(--be-gold);
+}
+
+.stat-card .stat-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--be-navy);
+}
+
+.stat-card .stat-label {
+  font-size: 0.82rem;
+  color: var(--be-gray-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.welcome-banner {
+  background: linear-gradient(135deg, var(--be-navy), #2a3f6a);
+  color: white;
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.welcome-banner img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid var(--be-gold);
+  background: white;
+  object-fit: contain;
+}
+
+.welcome-banner h2 { font-size: 1.5rem; margin-bottom: 4px; }
+.welcome-banner p { opacity: 0.85; font-size: 0.95rem; }
+
+/* ===== FORMS & BUTTONS ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn-primary { background: var(--be-navy); color: white; }
+.btn-primary:hover { background: #243558; }
+.btn-gold { background: var(--be-gold); color: var(--be-navy); }
+.btn-gold:hover { background: var(--be-gold-light); }
+.btn-danger { background: var(--be-danger); color: white; }
+.btn-danger:hover { background: #dc2626; }
+.btn-success { background: var(--be-success); color: white; }
+.btn-success:hover { background: #059669; }
+.btn-sm { padding: 5px 12px; font-size: 0.8rem; }
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--be-border);
+  color: #374151;
+}
+.btn-outline:hover { border-color: var(--be-navy); color: var(--be-navy); }
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--be-border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--be-gold);
+  box-shadow: 0 0 0 3px rgba(201,162,39,0.15);
+}
+
+label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 4px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-group { margin-bottom: 16px; }
+
+/* ===== TABLES ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--be-border);
+}
+
+th {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--be-gray-dark);
+  font-weight: 600;
+}
+
+tr:hover { background: #fafbfc; }
+
+/* ===== BADGES ===== */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.badge-life { background: #dcfce7; color: #166534; }
+.badge-earth { background: #fef3c7; color: #92400e; }
+.badge-physical { background: #dbeafe; color: #1e40af; }
+.badge-tech { background: #f3e8ff; color: #6b21a8; }
+.badge-inquiry { background: #fce7f3; color: #9d174d; }
+.badge-test { background: #e0e7ff; color: #3730a3; }
+.badge-build { background: #fed7aa; color: #9a3412; }
+.badge-hybrid { background: #ccfbf1; color: #065f46; }
+
+/* ===== EVENT CARDS GRID ===== */
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.event-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--be-border);
+  transition: box-shadow 0.2s, transform 0.2s;
+  cursor: pointer;
+}
+
+.event-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+
+.event-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.event-card h3 { font-size: 1rem; color: var(--be-navy); }
+
+.event-card .event-desc {
+  font-size: 0.84rem;
+  color: var(--be-gray-dark);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.event-card .event-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.event-members {
+  font-size: 0.8rem;
+  color: var(--be-gray-dark);
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--be-border);
+}
+
+/* ===== MODAL ===== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--be-navy);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--be-gray-dark);
+  line-height: 1;
+}
+
+/* ===== PROGRESS ===== */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--be-gold), var(--be-gold-light));
+  border-radius: 999px;
+  transition: width 0.3s;
+}
+
+.progress-entry {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 10px;
+  border-left: 3px solid var(--be-gold);
+}
+
+.progress-entry .pe-date {
+  font-size: 0.78rem;
+  color: var(--be-gray-dark);
+}
+
+.progress-entry .pe-text {
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+.progress-entry .pe-hours {
+  font-size: 0.78rem;
+  color: var(--be-info);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* ===== TABS ===== */
+.tab-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--be-border);
+  padding-bottom: 0;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 10px 18px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--be-gray-dark);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.15s;
+}
+
+.tab-btn:hover { color: var(--be-navy); }
+.tab-btn.active { color: var(--be-navy); border-bottom-color: var(--be-gold); font-weight: 600; }
+
+/* ===== FILTERS ===== */
+.filter-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-bar input[type="text"] { max-width: 280px; }
+.filter-bar select { max-width: 180px; }
+
+/* ===== TIPS ===== */
+.tip-card {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+
+.tip-card h4 { font-size: 0.88rem; color: #92400e; margin-bottom: 4px; }
+.tip-card p { font-size: 0.84rem; color: #78350f; }
+
+.resource-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  text-decoration: none;
+  color: #0369a1;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.resource-link:hover { background: #e0f2fe; }
+
+/* ===== MEMBER AVATAR ===== */
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .header-inner { flex-wrap: wrap; }
+  .header-nav { width: 100%; overflow-x: auto; margin-left: 0; }
+  .form-row { grid-template-columns: 1fr; }
+  .welcome-banner { flex-direction: column; text-align: center; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .events-grid { grid-template-columns: 1fr; }
+  .filter-bar { flex-direction: column; }
+  .filter-bar input[type="text"], .filter-bar select { max-width: 100%; }
+}
+
+/* ===== TOAST ===== */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  background: var(--be-navy);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  box-shadow: var(--shadow-lg);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* ===== ACCORDION ===== */
+.accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 12px 0;
+}
+
+.accordion-header .arrow {
+  transition: transform 0.2s;
+  font-size: 0.8rem;
+}
+
+.accordion-header.open .arrow { transform: rotate(90deg); }
+.accordion-body { display: none; padding-bottom: 12px; }
+.accordion-body.open { display: block; }
+
+/* ===== CHECKLIST ===== */
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 0.9rem;
+}
+
+.checklist-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--be-gold);
+}
+
+.checklist-item.done { text-decoration: line-through; color: var(--be-gray-dark); }
+
+/* Print styles */
+@media print {
+  .app-header, .header-nav, .btn, .filter-bar { display: none !important; }
+  .card { box-shadow: none; border: 1px solid #ddd; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="app-header">
+  <div class="header-inner">
+    <img src="https://carolinapreps.com/teams/assets/teams/frontend/logo/Bishop-England-Battling-Bishops.png"
+         alt="Bishop England Battling Bishops"
+         class="header-logo"
+         onerror="this.style.display='none'">
+    <div class="header-text">
+      <h1>Bishop England Science Olympiad</h1>
+      <p>2025&ndash;2026 Season &bull; Division C &bull; South Carolina</p>
+    </div>
+    <nav class="header-nav">
+      <button class="nav-btn active" onclick="showPage('dashboard')">Dashboard</button>
+      <button class="nav-btn" onclick="showPage('roster')">Roster</button>
+      <button class="nav-btn" onclick="showPage('events')">Events</button>
+      <button class="nav-btn" onclick="showPage('assignments')">Assignments</button>
+      <button class="nav-btn" onclick="showPage('progress')">Progress Log</button>
+      <button class="nav-btn" onclick="showPage('resources')">Resources</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ===== TOAST ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===== MAIN ===== -->
+<main class="app-main">
+
+  <!-- ===== DASHBOARD ===== -->
+  <div id="page-dashboard" class="page active">
+    <div class="welcome-banner">
+      <img src="https://carolinapreps.com/teams/assets/teams/frontend/logo/Bishop-England-Battling-Bishops.png"
+           alt="Bishop England" onerror="this.style.display='none'">
+      <div>
+        <h2>Welcome, Battling Bishops!</h2>
+        <p>Manage your Science Olympiad team, assign events, track progress, and prepare for competition. Go Bishops!</p>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number" id="stat-members">0</div>
+        <div class="stat-label">Team Members</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">23</div>
+        <div class="stat-label">Events</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-assigned">0</div>
+        <div class="stat-label">Assignments</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-hours">0</div>
+        <div class="stat-label">Practice Hours</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">&#9889; Quick Actions</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="showPage('roster');openAddMember()">+ Add Team Member</button>
+        <button class="btn btn-gold" onclick="showPage('assignments')">Assign Events</button>
+        <button class="btn btn-outline" onclick="showPage('progress')">Log Progress</button>
+        <button class="btn btn-outline" onclick="showPage('events')">Browse Events</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">&#128197; SC Science Olympiad Info</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <strong>State Tournament</strong><br>
+          <span style="font-size:0.9rem;color:var(--be-gray-dark)">Presbyterian College, Clinton, SC</span><br>
+          <span style="font-size:0.85rem;">February 28, 2026</span>
+        </div>
+        <div>
+          <strong>National Tournament</strong><br>
+          <span style="font-size:0.9rem;color:var(--be-gray-dark)">USC, Los Angeles, CA</span><br>
+          <span style="font-size:0.85rem;">May 22&ndash;23, 2026</span>
+        </div>
+        <div>
+          <strong>Division</strong><br>
+          <span style="font-size:0.9rem;">Division C (High School)</span>
+        </div>
+        <div>
+          <strong>SC Website</strong><br>
+          <a href="https://www.scscioly.org" target="_blank" style="font-size:0.9rem;">scscioly.org</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">&#127942; Recent Achievements</div>
+      <div id="achievements-list" style="font-size:0.9rem;color:var(--be-gray-dark);">
+        <p><strong>2026 SC State Tournament</strong> &mdash; Runner-Up (2nd Place) out of 17 teams!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ROSTER ===== -->
+  <div id="page-roster" class="page">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="color:var(--be-navy);">Team Roster</h2>
+      <button class="btn btn-primary" onclick="openAddMember()">+ Add Member</button>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Grade</th>
+            <th>Role</th>
+            <th>Events</th>
+            <th>Hours Logged</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="roster-body"></tbody>
+      </table>
+      <div id="roster-empty" style="text-align:center;padding:40px;color:var(--be-gray-dark);">
+        No team members yet. Click "+ Add Member" to get started!
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== EVENTS ===== -->
+  <div id="page-events" class="page">
+    <h2 style="color:var(--be-navy);margin-bottom:20px;">2026 Division C Events</h2>
+
+    <div class="filter-bar">
+      <input type="text" id="event-search" placeholder="Search events..." oninput="filterEvents()">
+      <select id="event-cat-filter" onchange="filterEvents()">
+        <option value="">All Categories</option>
+        <option value="Life Science">Life Science</option>
+        <option value="Earth Science">Earth Science</option>
+        <option value="Physical Science">Physical Science</option>
+        <option value="Technology">Technology</option>
+        <option value="Inquiry">Inquiry</option>
+      </select>
+      <select id="event-type-filter" onchange="filterEvents()">
+        <option value="">All Types</option>
+        <option value="Test">Test</option>
+        <option value="Build">Build</option>
+        <option value="Hybrid">Hybrid</option>
+      </select>
+    </div>
+
+    <div class="events-grid" id="events-grid"></div>
+  </div>
+
+  <!-- ===== ASSIGNMENTS ===== -->
+  <div id="page-assignments" class="page">
+    <h2 style="color:var(--be-navy);margin-bottom:20px;">Event Assignments</h2>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">Assign Member to Event</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Team Member</label>
+          <select id="assign-member"></select>
+        </div>
+        <div class="form-group">
+          <label>Event</label>
+          <select id="assign-event"></select>
+        </div>
+      </div>
+      <button class="btn btn-gold" onclick="addAssignment()">Assign</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Current Assignments</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>Assigned Members</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="assignments-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== PROGRESS ===== -->
+  <div id="page-progress" class="page">
+    <h2 style="color:var(--be-navy);margin-bottom:20px;">Progress Log</h2>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">Log Practice / Study Session</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Team Member</label>
+          <select id="progress-member"></select>
+        </div>
+        <div class="form-group">
+          <label>Event</label>
+          <select id="progress-event"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="progress-date">
+        </div>
+        <div class="form-group">
+          <label>Hours</label>
+          <input type="number" id="progress-hours" min="0.25" step="0.25" value="1" placeholder="Hours practiced">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="progress-notes" rows="3" placeholder="What did you work on? Key takeaways?"></textarea>
+      </div>
+      <button class="btn btn-success" onclick="addProgress()">Log Progress</button>
+    </div>
+
+    <div class="filter-bar">
+      <select id="progress-filter-member" onchange="renderProgress()">
+        <option value="">All Members</option>
+      </select>
+      <select id="progress-filter-event" onchange="renderProgress()">
+        <option value="">All Events</option>
+      </select>
+    </div>
+
+    <div id="progress-list"></div>
+    <div id="progress-empty" class="card" style="text-align:center;color:var(--be-gray-dark);padding:40px;">
+      No progress entries yet. Start logging practice sessions above!
+    </div>
+  </div>
+
+  <!-- ===== RESOURCES ===== -->
+  <div id="page-resources" class="page">
+    <h2 style="color:var(--be-navy);margin-bottom:20px;">Event Resources & Tips</h2>
+
+    <div class="filter-bar">
+      <input type="text" id="resource-search" placeholder="Search events..." oninput="filterResources()">
+    </div>
+
+    <div id="resources-list"></div>
+  </div>
+
+</main>
+
+<!-- ===== ADD MEMBER MODAL ===== -->
+<div class="modal-overlay" id="modal-add-member">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="member-modal-title">Add Team Member</span>
+      <button class="modal-close" onclick="closeModal('modal-add-member')">&times;</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>First Name</label>
+        <input type="text" id="member-first" placeholder="First name">
+      </div>
+      <div class="form-group">
+        <label>Last Name</label>
+        <input type="text" id="member-last" placeholder="Last name">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Grade</label>
+        <select id="member-grade">
+          <option value="9">9th Grade (Freshman)</option>
+          <option value="10">10th Grade (Sophomore)</option>
+          <option value="11">11th Grade (Junior)</option>
+          <option value="12">12th Grade (Senior)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="member-role">
+          <option value="Member">Member</option>
+          <option value="Captain">Captain</option>
+          <option value="Co-Captain">Co-Captain</option>
+          <option value="Alternate">Alternate</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Email (optional)</label>
+      <input type="email" id="member-email" placeholder="student@example.com">
+    </div>
+    <div class="form-group">
+      <label>Notes (optional)</label>
+      <textarea id="member-notes" rows="2" placeholder="Strengths, interests, etc."></textarea>
+    </div>
+    <input type="hidden" id="member-edit-id" value="">
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-member')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMember()">Save Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EVENT DETAIL MODAL ===== -->
+<div class="modal-overlay" id="modal-event-detail">
+  <div class="modal" style="max-width:700px;">
+    <div class="modal-title">
+      <span id="event-detail-title">Event</span>
+      <button class="modal-close" onclick="closeModal('modal-event-detail')">&times;</button>
+    </div>
+    <div id="event-detail-content"></div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const EVENTS = [
+  {
+    id: "anatomy", name: "Anatomy and Physiology", category: "Life Science", type: "Test",
+    description: "Written test covering the anatomy and physiology of the Nervous, Endocrine, and Sense Organs systems for the 2026 season.",
+    tips: [
+      "Create detailed diagrams of neural pathways and endocrine feedback loops",
+      "Use flashcards for hormone names, functions, and target organs",
+      "Practice with released tests from Scioly.org",
+      "Study common disorders for each system (e.g., Parkinson's, diabetes, cataracts)"
+    ],
+    resources: [
+      { name: "Scioly.org Anatomy Page", url: "https://scioly.org/wiki/index.php/Anatomy_and_Physiology" },
+      { name: "Khan Academy - Nervous System", url: "https://www.khanacademy.org/science/biology/human-biology/neuron-nervous-system/v/the-neuron-and-nervous-system" },
+      { name: "Scioly Student Center Tests", url: "https://scioly.org/tests/anatomy-and-physiology" }
+    ]
+  },
+  {
+    id: "astronomy", name: "Astronomy", category: "Earth Science", type: "Test",
+    description: "Test on stellar evolution, HR diagrams, and deep sky objects. The 2026 topic focuses on stellar evolution and star formation.",
+    tips: [
+      "Master the HR diagram - be able to plot and interpret any star",
+      "Memorize the stellar evolution sequence from protostar to end states",
+      "Practice calculating with the magnitude scale and distance modulus",
+      "Know major DSOs: Messier objects, nebulae types, and galaxy classification"
+    ],
+    resources: [
+      { name: "Scioly.org Astronomy Page", url: "https://scioly.org/wiki/index.php/Astronomy" },
+      { name: "NASA - Stellar Evolution", url: "https://science.nasa.gov/astrophysics/focus-areas/how-do-stars-form-and-evolve" },
+      { name: "Stellarium (free planetarium)", url: "https://stellarium.org/" }
+    ]
+  },
+  {
+    id: "boomilever", name: "Boomilever", category: "Technology", type: "Build",
+    description: "Design and build a cantilevered structure that holds the maximum load while minimizing the mass of the structure.",
+    tips: [
+      "Use balsa wood and practice cutting consistent members",
+      "Study Warren truss and Pratt truss designs",
+      "Test with incremental loading to find failure points",
+      "Focus on joint construction - glue joints are critical",
+      "Keep a build log to track what works and what doesn't"
+    ],
+    resources: [
+      { name: "Scioly.org Boomilever Page", url: "https://scioly.org/wiki/index.php/Boomilever" },
+      { name: "Scioly Student Center Build Tips", url: "https://scioly.org/forums/viewforum.php?f=90" }
+    ]
+  },
+  {
+    id: "bungee", name: "Bungee Drop", category: "Technology", type: "Build",
+    description: "Construct a bungee cord system to drop a mass as close to a target distance as possible without going over.",
+    tips: [
+      "Calibrate your bungee with multiple test drops at various distances",
+      "Create a data table mapping cord length to drop distance",
+      "Account for temperature effects on bungee elasticity",
+      "Practice quick setup and measurement at competition"
+    ],
+    resources: [
+      { name: "Scioly.org Bungee Drop Page", url: "https://scioly.org/wiki/index.php/Bungee_Drop" },
+      { name: "Physics of Bungee Jumping", url: "https://www.khanacademy.org/science/physics/work-and-energy/hookes-law/v/intro-to-springs-and-hookes-law" }
+    ]
+  },
+  {
+    id: "chemlab", name: "Chem Lab", category: "Physical Science", type: "Hybrid",
+    description: "Perform chemistry laboratory tasks including Kinetics, Stoichiometry, and Reaction Rates. Includes both a written test and hands-on lab component.",
+    tips: [
+      "Master stoichiometry calculations thoroughly",
+      "Practice titrations and know your indicators",
+      "Understand reaction rate laws and factors affecting rates",
+      "Bring a well-organized binder with reference tables",
+      "Practice significant figures and error analysis"
+    ],
+    resources: [
+      { name: "Scioly.org Chem Lab Page", url: "https://scioly.org/wiki/index.php/Chem_Lab" },
+      { name: "Khan Academy - Chemical Kinetics", url: "https://www.khanacademy.org/science/ap-chemistry/kinetics-ap" },
+      { name: "AP Chemistry Resources", url: "https://apcentral.collegeboard.org/courses/ap-chemistry" }
+    ]
+  },
+  {
+    id: "circuit", name: "Circuit Lab", category: "Physical Science", type: "Hybrid",
+    description: "Understand and apply knowledge of DC circuits including Kirchhoff's laws, series/parallel combinations, and hands-on circuit analysis.",
+    tips: [
+      "Practice with real breadboards and multimeters",
+      "Master Ohm's Law, Kirchhoff's Voltage and Current Laws",
+      "Know how to simplify complex resistor networks",
+      "Study RC circuits and capacitor behavior",
+      "Bring a comprehensive formula sheet"
+    ],
+    resources: [
+      { name: "Scioly.org Circuit Lab Page", url: "https://scioly.org/wiki/index.php/Circuit_Lab" },
+      { name: "Falstad Circuit Simulator", url: "https://www.falstad.com/circuit/" },
+      { name: "Khan Academy - Circuits", url: "https://www.khanacademy.org/science/physics/circuits-topic" }
+    ]
+  },
+  {
+    id: "codebusters", name: "Codebusters", category: "Physical Science", type: "Test",
+    description: "Cryptanalyze and decode encrypted messages using various cipher types including Aristocrats, Patristocrats, and Xenocrypts.",
+    tips: [
+      "Practice frequency analysis daily - speed is key",
+      "Memorize common English letter frequencies (ETAOINSHRDLU)",
+      "Learn to spot common patterns: THE, AND, -ING, -TION",
+      "Practice Vigenere decryption and Hill cipher matrix math",
+      "Work as a team - one person decodes while partner checks"
+    ],
+    resources: [
+      { name: "Scioly.org Codebusters Page", url: "https://scioly.org/wiki/index.php/Codebusters" },
+      { name: "Cryptogram Solver Practice", url: "https://quipqiup.com/" },
+      { name: "Toebes Cipher Tools", url: "https://toebes.com/codebusters/" }
+    ]
+  },
+  {
+    id: "genes", name: "Designer Genes", category: "Life Science", type: "Test",
+    description: "Written test covering molecular genetics, biotechnology, and genetic engineering concepts.",
+    tips: [
+      "Master DNA replication, transcription, and translation processes",
+      "Study CRISPR, PCR, gel electrophoresis, and other biotech techniques",
+      "Know inheritance patterns: Mendelian, co-dominance, epistasis",
+      "Practice genetics problems with pedigrees and Punnett squares",
+      "Stay updated on current genetic engineering news"
+    ],
+    resources: [
+      { name: "Scioly.org Designer Genes Page", url: "https://scioly.org/wiki/index.php/Designer_Genes" },
+      { name: "Khan Academy - Molecular Biology", url: "https://www.khanacademy.org/science/ap-biology/gene-expression-and-regulation" },
+      { name: "HHMI BioInteractive", url: "https://www.biointeractive.org/" }
+    ]
+  },
+  {
+    id: "disease", name: "Disease Detectives", category: "Life Science", type: "Test",
+    description: "Apply principles of epidemiology to analyze disease outbreaks, interpret data, and understand public health concepts.",
+    tips: [
+      "Learn epidemiological terms: incidence, prevalence, morbidity, mortality",
+      "Practice calculating relative risk, odds ratios, and attack rates",
+      "Study major study designs: cohort, case-control, cross-sectional",
+      "Know common infectious and chronic diseases and their risk factors",
+      "Review CDC case studies and MMWR reports"
+    ],
+    resources: [
+      { name: "Scioly.org Disease Detectives Page", url: "https://scioly.org/wiki/index.php/Disease_Detectives" },
+      { name: "CDC MMWR Reports", url: "https://www.cdc.gov/mmwr/" },
+      { name: "Khan Academy - Epidemiology", url: "https://www.khanacademy.org/science/health-and-medicine/infectious-diseases" }
+    ]
+  },
+  {
+    id: "dynamic", name: "Dynamic Planet", category: "Earth Science", type: "Test",
+    description: "Test covering Earth's dynamic processes. The 2026 topic focuses on Glaciers and Glaciation.",
+    tips: [
+      "Study glacial landforms: moraines, drumlins, eskers, cirques",
+      "Understand the difference between alpine and continental glaciation",
+      "Learn about ice ages and Milankovitch cycles",
+      "Practice reading topographic maps with glacial features",
+      "Know current glacial retreat and climate change connections"
+    ],
+    resources: [
+      { name: "Scioly.org Dynamic Planet Page", url: "https://scioly.org/wiki/index.php/Dynamic_Planet" },
+      { name: "USGS Glaciers", url: "https://www.usgs.gov/programs/climate-adaptation-science-centers/glaciers" },
+      { name: "NSIDC All About Glaciers", url: "https://nsidc.org/learn/parts-cryosphere/glaciers" }
+    ]
+  },
+  {
+    id: "ev", name: "Electric Vehicle", category: "Technology", type: "Build",
+    description: "Design, build, and test a battery-powered vehicle that travels a specified distance as quickly as possible, then stops on a target point.",
+    tips: [
+      "Start with gear ratio calculations for your motor",
+      "Build a reliable braking/stopping mechanism early",
+      "Test on different surfaces - gym floors vary!",
+      "Keep a detailed engineering notebook",
+      "Use consistent batteries and measure voltage before each run"
+    ],
+    resources: [
+      { name: "Scioly.org Electric Vehicle Page", url: "https://scioly.org/wiki/index.php/Electric_Vehicle" },
+      { name: "EV Design Forums", url: "https://scioly.org/forums/viewforum.php?f=97" }
+    ]
+  },
+  {
+    id: "cad", name: "Engineering CAD", category: "Technology", type: "Test",
+    description: "Read and interpret engineering drawings, then collaborate to CAD parts using Onshape.",
+    tips: [
+      "Practice in Onshape daily - speed matters",
+      "Learn standard engineering drawing views and projections",
+      "Master GD&T symbols and tolerancing",
+      "Practice reading orthographic and isometric views",
+      "Work with your partner to divide tasks efficiently"
+    ],
+    resources: [
+      { name: "Scioly.org Engineering CAD Page", url: "https://scioly.org/wiki/index.php/Engineering_CAD" },
+      { name: "Onshape Learning Center", url: "https://learn.onshape.com/" },
+      { name: "Onshape (free education)", url: "https://www.onshape.com/en/education/" }
+    ]
+  },
+  {
+    id: "entomology", name: "Entomology", category: "Life Science", type: "Test",
+    description: "Identify insects and demonstrate knowledge of insect anatomy, physiology, ecology, and classification.",
+    tips: [
+      "Create an insect ID guide organized by order",
+      "Learn the major orders: Coleoptera, Lepidoptera, Hymenoptera, Diptera, etc.",
+      "Study insect anatomy: head, thorax, abdomen structures",
+      "Practice with pinned specimens if possible",
+      "Know life cycles: complete vs. incomplete metamorphosis"
+    ],
+    resources: [
+      { name: "Scioly.org Entomology Page", url: "https://scioly.org/wiki/index.php/Entomology" },
+      { name: "BugGuide.net", url: "https://bugguide.net/" },
+      { name: "Insect Identification Key", url: "https://www.insectidentification.org/" }
+    ]
+  },
+  {
+    id: "expdesign", name: "Experimental Design", category: "Inquiry", type: "Test",
+    description: "Design, conduct, and report the findings of an experiment entirely on-site. Tests scientific method knowledge and lab skills.",
+    tips: [
+      "Practice designing experiments under time pressure",
+      "Always identify independent, dependent, and controlled variables",
+      "Learn proper graphing techniques and statistical analysis",
+      "Write clear hypotheses in if/then/because format",
+      "Practice scientific writing: abstract, methods, results, conclusion"
+    ],
+    resources: [
+      { name: "Scioly.org Experimental Design Page", url: "https://scioly.org/wiki/index.php/Experimental_Design" },
+      { name: "Science Buddies - Experimental Design", url: "https://www.sciencebuddies.org/science-fair-projects/science-fair/designing-an-experiment" }
+    ]
+  },
+  {
+    id: "forensics", name: "Forensics", category: "Life Science", type: "Hybrid",
+    description: "Identify and analyze evidence (hair, fiber, fingerprints, blood, DNA, etc.) found at a simulated crime scene.",
+    tips: [
+      "Study all evidence types: hair, fiber, blood, prints, polymers, DNA",
+      "Practice with hands-on lab activities when possible",
+      "Know blood spatter analysis basics",
+      "Study toxicology and common poisons",
+      "Create a comprehensive binder with reference materials"
+    ],
+    resources: [
+      { name: "Scioly.org Forensics Page", url: "https://scioly.org/wiki/index.php/Forensics" },
+      { name: "FBI Forensics Resources", url: "https://www.fbi.gov/services/laboratory" },
+      { name: "Forensic Science EDU", url: "https://www.forensicscienceedu.org/" }
+    ]
+  },
+  {
+    id: "helicopter", name: "Helicopter", category: "Technology", type: "Build",
+    description: "Design, build, and test a rubber-powered helicopter for maximum flight time.",
+    tips: [
+      "Start with proven designs before innovating",
+      "Balsa wood selection is critical - weigh every piece",
+      "Wind rubber motors consistently for repeatable flights",
+      "Practice in the competition venue if possible (ceiling height matters)",
+      "Keep spare parts and repair supplies ready"
+    ],
+    resources: [
+      { name: "Scioly.org Helicopter Page", url: "https://scioly.org/wiki/index.php/Helicopter" },
+      { name: "Indoor Free Flight Resources", url: "https://scioly.org/forums/viewforum.php?f=101" }
+    ]
+  },
+  {
+    id: "hovercraft", name: "Hovercraft", category: "Technology", type: "Build",
+    description: "Build a hovercraft that travels a specified distance. Focus on air cushion design and propulsion.",
+    tips: [
+      "Understand the physics of air cushion vehicles",
+      "Experiment with skirt designs for best lift",
+      "Use a consistent power source and test repeatedly",
+      "Document your design iterations",
+      "Practice on surfaces similar to the competition floor"
+    ],
+    resources: [
+      { name: "Scioly.org Hovercraft Page", url: "https://scioly.org/wiki/index.php/Hovercraft" },
+      { name: "NASA - How Hovercrafts Work", url: "https://www.grc.nasa.gov/www/k-12/airplane/hovcraft.html" }
+    ]
+  },
+  {
+    id: "machines", name: "Machines", category: "Physical Science", type: "Hybrid",
+    description: "Written test on simple and compound machine concepts, plus building and calibrating a lever-based measuring device.",
+    tips: [
+      "Master mechanical advantage calculations for all 6 simple machines",
+      "Build your lever device early and calibrate extensively",
+      "Understand compound machines and efficiency calculations",
+      "Practice torque and rotational equilibrium problems",
+      "Bring a well-organized reference sheet"
+    ],
+    resources: [
+      { name: "Scioly.org Machines Page", url: "https://scioly.org/wiki/index.php/Machines" },
+      { name: "Khan Academy - Simple Machines", url: "https://www.khanacademy.org/science/physics/torque-angular-momentum" },
+      { name: "Physics Classroom - Simple Machines", url: "https://www.physicsclassroom.com/class/energy" }
+    ]
+  },
+  {
+    id: "matsci", name: "Material Science", category: "Physical Science", type: "Test",
+    description: "Answer questions on the properties, structure, and applications of various materials including metals, polymers, ceramics, and composites.",
+    tips: [
+      "Study the four main material categories: metals, polymers, ceramics, composites",
+      "Understand crystal structures: BCC, FCC, HCP",
+      "Learn stress-strain curves and material testing methods",
+      "Know phase diagrams, especially iron-carbon",
+      "Study real-world applications and material selection"
+    ],
+    resources: [
+      { name: "Scioly.org Material Science Page", url: "https://scioly.org/wiki/index.php/Material_Science" },
+      { name: "MIT OpenCourseWare - Materials Science", url: "https://ocw.mit.edu/courses/3-091sc-introduction-to-solid-state-chemistry-fall-2010/" }
+    ]
+  },
+  {
+    id: "quantum", name: "Quantum Detanglers", category: "Physical Science", type: "Test",
+    description: "Demonstrate knowledge of quantum mechanics principles including wave-particle duality, quantum states, and quantum computing basics.",
+    tips: [
+      "Start with the basics: wave functions, uncertainty principle",
+      "Study the photoelectric effect and Bohr model",
+      "Understand quantum numbers and electron configuration",
+      "Learn about qubits, superposition, and entanglement",
+      "Practice conceptual problems rather than heavy math"
+    ],
+    resources: [
+      { name: "Scioly.org Quantum Page", url: "https://scioly.org/wiki/index.php/Quantum_Detanglers" },
+      { name: "Khan Academy - Quantum Physics", url: "https://www.khanacademy.org/science/physics/quantum-physics" },
+      { name: "IBM Quantum Learning", url: "https://learning.quantum-computing.ibm.com/" }
+    ]
+  },
+  {
+    id: "remote", name: "Remote Sensing", category: "Earth Science", type: "Test",
+    description: "Interpret and analyze satellite images, aerial photos, and other remotely sensed data about Earth's surface.",
+    tips: [
+      "Learn to interpret different band combinations in satellite imagery",
+      "Study electromagnetic spectrum and atmospheric windows",
+      "Practice with real Landsat and Sentinel imagery",
+      "Know the difference between active and passive remote sensing",
+      "Understand NDVI and other vegetation indices"
+    ],
+    resources: [
+      { name: "Scioly.org Remote Sensing Page", url: "https://scioly.org/wiki/index.php/Remote_Sensing" },
+      { name: "NASA Earth Observatory", url: "https://earthobservatory.nasa.gov/" },
+      { name: "USGS EarthExplorer", url: "https://earthexplorer.usgs.gov/" }
+    ]
+  },
+  {
+    id: "rocks", name: "Rocks and Minerals", category: "Earth Science", type: "Test",
+    description: "Identify rocks and minerals using physical and chemical properties, and demonstrate knowledge of petrology and mineralogy.",
+    tips: [
+      "Practice hands-on identification with real specimens",
+      "Master the Mohs hardness scale and streak tests",
+      "Know the three rock types and the rock cycle thoroughly",
+      "Study thin section identification if possible",
+      "Create a systematic ID flowchart for quick identification"
+    ],
+    resources: [
+      { name: "Scioly.org Rocks & Minerals Page", url: "https://scioly.org/wiki/index.php/Rocks_and_Minerals" },
+      { name: "Mineralogy Database", url: "https://www.mindat.org/" },
+      { name: "Geology.com Rock ID", url: "https://geology.com/rocks/" }
+    ]
+  },
+  {
+    id: "robottour", name: "Robot Tour", category: "Technology", type: "Build",
+    description: "Build a robot that navigates a course as accurately and quickly as possible without any remote control.",
+    tips: [
+      "Use reliable motors with encoders for distance tracking",
+      "Calibrate turning angles precisely - small errors compound",
+      "Program for different course layouts, not just one path",
+      "Test on the actual competition surface when possible",
+      "Have a backup robot or repair kit ready"
+    ],
+    resources: [
+      { name: "Scioly.org Robot Tour Page", url: "https://scioly.org/wiki/index.php/Robot_Tour" },
+      { name: "Arduino Getting Started", url: "https://www.arduino.cc/en/Guide" }
+    ]
+  },
+  {
+    id: "water", name: "Water Quality", category: "Life Science", type: "Hybrid",
+    description: "Analyze water quality through chemical and biological tests, and demonstrate knowledge of aquatic ecology and water treatment.",
+    tips: [
+      "Practice with water testing kits for pH, DO, nitrates, phosphates",
+      "Learn to identify aquatic macroinvertebrates for biotic index",
+      "Study the Clean Water Act and water treatment processes",
+      "Know common water pollutants and their sources",
+      "Practice salinometer and water chemistry calculations"
+    ],
+    resources: [
+      { name: "Scioly.org Water Quality Page", url: "https://scioly.org/wiki/index.php/Water_Quality" },
+      { name: "EPA Water Quality", url: "https://www.epa.gov/waterdata" },
+      { name: "Macroinvertebrate ID Guide", url: "https://www.stroudcenter.org/macros/" }
+    ]
+  }
+];
+
+// ===== APP STATE (persisted to localStorage) =====
+const STORAGE_KEY = "be_scioly_manager";
+
+function getState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { members: [], assignments: [], progress: [], nextMemberId: 1 };
+}
+
+function saveState(state) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+let state = getState();
+
+// ===== UTILITY =====
+function toast(msg) {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function generateColor(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  const colors = ['#1a2744','#c9a227','#3b82f6','#10b981','#ef4444','#8b5cf6','#f59e0b','#ec4899','#06b6d4','#84cc16'];
+  return colors[Math.abs(hash) % colors.length];
+}
+
+function initials(first, last) {
+  return ((first?first[0]:'')+(last?last[0]:'')).toUpperCase();
+}
+
+// ===== NAVIGATION =====
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    if (b.textContent.toLowerCase().includes(id === 'dashboard' ? 'dash' : id)) b.classList.add('active');
+  });
+  if (id === 'roster') renderRoster();
+  if (id === 'events') renderEvents();
+  if (id === 'assignments') renderAssignments();
+  if (id === 'progress') renderProgress();
+  if (id === 'resources') renderResources();
+  if (id === 'dashboard') updateDashboard();
+}
+
+// ===== DASHBOARD =====
+function updateDashboard() {
+  document.getElementById('stat-members').textContent = state.members.length;
+  document.getElementById('stat-assigned').textContent = state.assignments.length;
+  const totalHours = state.progress.reduce((s, p) => s + (parseFloat(p.hours) || 0), 0);
+  document.getElementById('stat-hours').textContent = totalHours.toFixed(1);
+}
+
+// ===== ROSTER =====
+function renderRoster() {
+  const body = document.getElementById('roster-body');
+  const empty = document.getElementById('roster-empty');
+  if (state.members.length === 0) {
+    body.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  body.innerHTML = state.members.map(m => {
+    const evts = state.assignments.filter(a => a.memberId === m.id).map(a => {
+      const ev = EVENTS.find(e => e.id === a.eventId);
+      return ev ? ev.name : '';
+    }).filter(Boolean);
+    const hrs = state.progress.filter(p => p.memberId === m.id).reduce((s,p) => s + (parseFloat(p.hours)||0), 0);
+    return `<tr>
+      <td>
+        <div class="member-row">
+          <div class="avatar" style="background:${generateColor(m.first+m.last)}">${initials(m.first,m.last)}</div>
+          <div><strong>${m.first} ${m.last}</strong>${m.email ? '<br><span style="font-size:0.78rem;color:var(--be-gray-dark)">'+m.email+'</span>' : ''}</div>
+        </div>
+      </td>
+      <td>${m.grade}th</td>
+      <td><span class="badge ${m.role==='Captain'?'badge-life':m.role==='Co-Captain'?'badge-earth':'badge-physical'}">${m.role}</span></td>
+      <td>${evts.length > 0 ? evts.map(e=>'<span style="font-size:0.82rem;">'+e+'</span>').join(', ') : '<span style="color:var(--be-gray-dark);font-size:0.82rem;">None assigned</span>'}</td>
+      <td>${hrs.toFixed(1)}h</td>
+      <td>
+        <button class="btn btn-sm btn-outline" onclick="editMember(${m.id})">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteMember(${m.id})">Remove</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openAddMember() {
+  document.getElementById('member-modal-title').textContent = 'Add Team Member';
+  document.getElementById('member-first').value = '';
+  document.getElementById('member-last').value = '';
+  document.getElementById('member-grade').value = '9';
+  document.getElementById('member-role').value = 'Member';
+  document.getElementById('member-email').value = '';
+  document.getElementById('member-notes').value = '';
+  document.getElementById('member-edit-id').value = '';
+  openModal('modal-add-member');
+}
+
+function editMember(id) {
+  const m = state.members.find(x => x.id === id);
+  if (!m) return;
+  document.getElementById('member-modal-title').textContent = 'Edit Team Member';
+  document.getElementById('member-first').value = m.first;
+  document.getElementById('member-last').value = m.last;
+  document.getElementById('member-grade').value = m.grade;
+  document.getElementById('member-role').value = m.role;
+  document.getElementById('member-email').value = m.email || '';
+  document.getElementById('member-notes').value = m.notes || '';
+  document.getElementById('member-edit-id').value = id;
+  openModal('modal-add-member');
+}
+
+function saveMember() {
+  const first = document.getElementById('member-first').value.trim();
+  const last = document.getElementById('member-last').value.trim();
+  if (!first || !last) { toast('Please enter first and last name'); return; }
+  const data = {
+    first, last,
+    grade: document.getElementById('member-grade').value,
+    role: document.getElementById('member-role').value,
+    email: document.getElementById('member-email').value.trim(),
+    notes: document.getElementById('member-notes').value.trim()
+  };
+  const editId = document.getElementById('member-edit-id').value;
+  if (editId) {
+    const idx = state.members.findIndex(m => m.id === parseInt(editId));
+    if (idx >= 0) { state.members[idx] = { ...state.members[idx], ...data }; }
+    toast('Member updated!');
+  } else {
+    data.id = state.nextMemberId++;
+    state.members.push(data);
+    toast('Member added!');
+  }
+  saveState(state);
+  closeModal('modal-add-member');
+  renderRoster();
+  updateDashboard();
+}
+
+function deleteMember(id) {
+  if (!confirm('Remove this member from the team?')) return;
+  state.members = state.members.filter(m => m.id !== id);
+  state.assignments = state.assignments.filter(a => a.memberId !== id);
+  state.progress = state.progress.filter(p => p.memberId !== id);
+  saveState(state);
+  renderRoster();
+  updateDashboard();
+  toast('Member removed');
+}
+
+// ===== EVENTS =====
+function renderEvents() {
+  const grid = document.getElementById('events-grid');
+  const search = (document.getElementById('event-search').value || '').toLowerCase();
+  const catFilter = document.getElementById('event-cat-filter').value;
+  const typeFilter = document.getElementById('event-type-filter').value;
+
+  const filtered = EVENTS.filter(e => {
+    if (search && !e.name.toLowerCase().includes(search) && !e.description.toLowerCase().includes(search)) return false;
+    if (catFilter && e.category !== catFilter) return false;
+    if (typeFilter && e.type !== typeFilter) return false;
+    return true;
+  });
+
+  grid.innerHTML = filtered.map(e => {
+    const assigned = state.assignments.filter(a => a.eventId === e.id);
+    const memberNames = assigned.map(a => {
+      const m = state.members.find(x => x.id === a.memberId);
+      return m ? m.first + ' ' + m.last : '';
+    }).filter(Boolean);
+
+    const catClass = e.category === 'Life Science' ? 'badge-life' :
+                     e.category === 'Earth Science' ? 'badge-earth' :
+                     e.category === 'Physical Science' ? 'badge-physical' :
+                     e.category === 'Technology' ? 'badge-tech' : 'badge-inquiry';
+    const typeClass = e.type === 'Test' ? 'badge-test' : e.type === 'Build' ? 'badge-build' : 'badge-hybrid';
+
+    return `<div class="event-card" onclick="showEventDetail('${e.id}')">
+      <div class="event-card-header">
+        <h3>${e.name}</h3>
+      </div>
+      <p class="event-desc">${e.description}</p>
+      <div class="event-meta">
+        <span class="badge ${catClass}">${e.category}</span>
+        <span class="badge ${typeClass}">${e.type}</span>
+      </div>
+      ${memberNames.length > 0 ? '<div class="event-members"><strong>Assigned:</strong> ' + memberNames.join(', ') + '</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function filterEvents() { renderEvents(); }
+
+function showEventDetail(eventId) {
+  const e = EVENTS.find(x => x.id === eventId);
+  if (!e) return;
+  document.getElementById('event-detail-title').textContent = e.name;
+
+  const catClass = e.category === 'Life Science' ? 'badge-life' :
+                   e.category === 'Earth Science' ? 'badge-earth' :
+                   e.category === 'Physical Science' ? 'badge-physical' :
+                   e.category === 'Technology' ? 'badge-tech' : 'badge-inquiry';
+  const typeClass = e.type === 'Test' ? 'badge-test' : e.type === 'Build' ? 'badge-build' : 'badge-hybrid';
+
+  const assigned = state.assignments.filter(a => a.eventId === e.id);
+  const memberNames = assigned.map(a => {
+    const m = state.members.find(x => x.id === a.memberId);
+    return m ? m.first + ' ' + m.last : '';
+  }).filter(Boolean);
+
+  const totalHours = state.progress.filter(p => p.eventId === e.id).reduce((s,p) => s + (parseFloat(p.hours)||0), 0);
+
+  let html = `
+    <div style="margin-bottom:16px;">
+      <span class="badge ${catClass}">${e.category}</span>
+      <span class="badge ${typeClass}">${e.type}</span>
+    </div>
+    <p style="margin-bottom:16px;color:var(--be-gray-dark);font-size:0.92rem;">${e.description}</p>
+
+    ${memberNames.length > 0 ? '<div style="margin-bottom:16px;"><strong>Assigned Members:</strong> ' + memberNames.join(', ') + '</div>' : ''}
+    <div style="margin-bottom:16px;"><strong>Total Practice Hours:</strong> ${totalHours.toFixed(1)}h</div>
+
+    <h3 style="color:var(--be-navy);font-size:1rem;margin-bottom:10px;">Tips & Study Strategies</h3>
+    ${e.tips.map(t => '<div class="tip-card"><p>' + t + '</p></div>').join('')}
+
+    <h3 style="color:var(--be-navy);font-size:1rem;margin:16px 0 10px;">Resources</h3>
+    ${e.resources.map(r => '<a class="resource-link" href="' + r.url + '" target="_blank" rel="noopener">' + r.name + ' &#8599;</a>').join('')}
+  `;
+
+  document.getElementById('event-detail-content').innerHTML = html;
+  openModal('modal-event-detail');
+}
+
+// ===== ASSIGNMENTS =====
+function renderAssignments() {
+  // Populate dropdowns
+  const memberSel = document.getElementById('assign-member');
+  const eventSel = document.getElementById('assign-event');
+  memberSel.innerHTML = '<option value="">Select member...</option>' +
+    state.members.map(m => `<option value="${m.id}">${m.first} ${m.last}</option>`).join('');
+  eventSel.innerHTML = '<option value="">Select event...</option>' +
+    EVENTS.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+
+  // Render table grouped by event
+  const body = document.getElementById('assignments-body');
+  const eventIds = [...new Set(state.assignments.map(a => a.eventId))];
+  body.innerHTML = eventIds.map(eid => {
+    const ev = EVENTS.find(e => e.id === eid);
+    if (!ev) return '';
+    const members = state.assignments.filter(a => a.eventId === eid).map(a => {
+      const m = state.members.find(x => x.id === a.memberId);
+      return m ? { ...m, assignId: a.memberId + '_' + a.eventId } : null;
+    }).filter(Boolean);
+
+    const catClass = ev.category === 'Life Science' ? 'badge-life' :
+                     ev.category === 'Earth Science' ? 'badge-earth' :
+                     ev.category === 'Physical Science' ? 'badge-physical' :
+                     ev.category === 'Technology' ? 'badge-tech' : 'badge-inquiry';
+
+    return `<tr>
+      <td><strong>${ev.name}</strong></td>
+      <td>${members.map(m => '<span class="member-row" style="display:inline-flex;gap:6px;margin-right:12px;"><div class="avatar" style="width:24px;height:24px;font-size:0.65rem;background:'+generateColor(m.first+m.last)+'">'+initials(m.first,m.last)+'</div> '+m.first+' '+m.last+'</span>').join('')}</td>
+      <td><span class="badge ${catClass}">${ev.category}</span></td>
+      <td><span class="badge badge-${ev.type.toLowerCase()}">${ev.type}</span></td>
+      <td>${members.map(m => '<button class="btn btn-sm btn-danger" style="margin:2px;" onclick="removeAssignment('+m.id+',\''+eid+'\')">Remove '+m.first+'</button>').join('')}</td>
+    </tr>`;
+  }).join('');
+
+  if (eventIds.length === 0) {
+    body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--be-gray-dark);padding:30px;">No assignments yet. Use the form above to assign members to events.</td></tr>';
+  }
+}
+
+function addAssignment() {
+  const memberId = parseInt(document.getElementById('assign-member').value);
+  const eventId = document.getElementById('assign-event').value;
+  if (!memberId || !eventId) { toast('Select both a member and an event'); return; }
+  if (state.assignments.some(a => a.memberId === memberId && a.eventId === eventId)) {
+    toast('This member is already assigned to this event'); return;
+  }
+  state.assignments.push({ memberId, eventId });
+  saveState(state);
+  renderAssignments();
+  updateDashboard();
+  toast('Assignment added!');
+}
+
+function removeAssignment(memberId, eventId) {
+  state.assignments = state.assignments.filter(a => !(a.memberId === memberId && a.eventId === eventId));
+  saveState(state);
+  renderAssignments();
+  updateDashboard();
+  toast('Assignment removed');
+}
+
+// ===== PROGRESS =====
+function renderProgress() {
+  // Populate dropdowns
+  const memberSel = document.getElementById('progress-member');
+  const eventSel = document.getElementById('progress-event');
+  const filterMember = document.getElementById('progress-filter-member');
+  const filterEvent = document.getElementById('progress-filter-event');
+
+  memberSel.innerHTML = '<option value="">Select member...</option>' +
+    state.members.map(m => `<option value="${m.id}">${m.first} ${m.last}</option>`).join('');
+  eventSel.innerHTML = '<option value="">Select event...</option>' +
+    EVENTS.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+
+  const currentFM = filterMember.value;
+  const currentFE = filterEvent.value;
+  filterMember.innerHTML = '<option value="">All Members</option>' +
+    state.members.map(m => `<option value="${m.id}">${m.first} ${m.last}</option>`).join('');
+  filterEvent.innerHTML = '<option value="">All Events</option>' +
+    EVENTS.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+  filterMember.value = currentFM;
+  filterEvent.value = currentFE;
+
+  // Filter and render
+  let entries = [...state.progress].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  if (currentFM) entries = entries.filter(p => p.memberId === parseInt(currentFM));
+  if (currentFE) entries = entries.filter(p => p.eventId === currentFE);
+
+  const list = document.getElementById('progress-list');
+  const empty = document.getElementById('progress-empty');
+
+  if (entries.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.innerHTML = entries.map((p, i) => {
+    const m = state.members.find(x => x.id === p.memberId);
+    const e = EVENTS.find(x => x.id === p.eventId);
+    return `<div class="progress-entry">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <strong>${m ? m.first + ' ' + m.last : 'Unknown'}</strong> &mdash; ${e ? e.name : 'Unknown Event'}
+          <div class="pe-date">${p.date || 'No date'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="pe-hours">${p.hours}h</span>
+          <button class="btn btn-sm btn-danger" onclick="deleteProgress(${i})">Delete</button>
+        </div>
+      </div>
+      ${p.notes ? '<div class="pe-text">' + p.notes.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function addProgress() {
+  const memberId = parseInt(document.getElementById('progress-member').value);
+  const eventId = document.getElementById('progress-event').value;
+  const date = document.getElementById('progress-date').value;
+  const hours = document.getElementById('progress-hours').value;
+  const notes = document.getElementById('progress-notes').value.trim();
+
+  if (!memberId || !eventId) { toast('Select a member and event'); return; }
+  if (!hours || parseFloat(hours) <= 0) { toast('Enter valid hours'); return; }
+
+  state.progress.push({ memberId, eventId, date: date || new Date().toISOString().split('T')[0], hours: parseFloat(hours), notes });
+  saveState(state);
+  document.getElementById('progress-notes').value = '';
+  document.getElementById('progress-hours').value = '1';
+  renderProgress();
+  updateDashboard();
+  toast('Progress logged!');
+}
+
+function deleteProgress(idx) {
+  const sorted = [...state.progress].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  const entry = sorted[idx];
+  const realIdx = state.progress.indexOf(entry);
+  if (realIdx >= 0) {
+    state.progress.splice(realIdx, 1);
+    saveState(state);
+    renderProgress();
+    updateDashboard();
+    toast('Entry deleted');
+  }
+}
+
+// ===== RESOURCES =====
+function renderResources() {
+  const search = (document.getElementById('resource-search').value || '').toLowerCase();
+  const list = document.getElementById('resources-list');
+
+  const filtered = EVENTS.filter(e => {
+    if (search && !e.name.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  list.innerHTML = filtered.map(e => {
+    const catClass = e.category === 'Life Science' ? 'badge-life' :
+                     e.category === 'Earth Science' ? 'badge-earth' :
+                     e.category === 'Physical Science' ? 'badge-physical' :
+                     e.category === 'Technology' ? 'badge-tech' : 'badge-inquiry';
+
+    return `<div class="card">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <strong style="color:var(--be-navy);">${e.name}</strong>
+          <span class="badge ${catClass}">${e.category}</span>
+        </div>
+        <span class="arrow">&#9654;</span>
+      </div>
+      <div class="accordion-body">
+        <h4 style="color:var(--be-navy);margin:10px 0 8px;">Tips & Strategies</h4>
+        ${e.tips.map(t => '<div class="tip-card"><p>' + t + '</p></div>').join('')}
+        <h4 style="color:var(--be-navy);margin:16px 0 8px;">Resources & Links</h4>
+        ${e.resources.map(r => '<a class="resource-link" href="' + r.url + '" target="_blank" rel="noopener">' + r.name + ' &#8599;</a>').join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterResources() { renderResources(); }
+
+function toggleAccordion(el) {
+  el.classList.toggle('open');
+  el.nextElementSibling.classList.toggle('open');
+}
+
+// ===== MODALS =====
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// ===== INIT =====
+document.getElementById('progress-date').value = new Date().toISOString().split('T')[0];
+updateDashboard();
+</script>
+</body>
+</html>
