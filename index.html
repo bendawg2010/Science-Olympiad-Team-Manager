@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bishop England Science Olympiad — Team Manager</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a1a0f;
+  --card: #111f16;
+  --surface: #162a1c;
+  --hover: #1c3424;
+  --green: #1e7a34;
+  --green-light: #27a349;
+  --green-bright: #34d058;
+  --gold: #c9a227;
+  --gold-light: #e6c94a;
+  --text: #e8f5eb;
+  --muted: #7fa88a;
+  --dim: #4a6b55;
+  --border: #1e3a28;
+  --danger: #e05252;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== HEADER ===== */
+header {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+header img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  background: white;
+  object-fit: contain;
+}
+
+header .school { font-size: 1rem; font-weight: 700; }
+header .sub { font-size: 0.8rem; color: var(--muted); }
+
+/* ===== HERO ===== */
+.hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px 40px;
+  text-align: center;
+}
+
+.hero-logo {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 3px solid var(--gold);
+  background: white;
+  object-fit: contain;
+  margin-bottom: 28px;
+  box-shadow: 0 0 40px rgba(201,162,39,0.25);
+}
+
+.hero h1 {
+  font-size: clamp(1.6rem, 5vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
+
+.hero h1 span { color: var(--gold); }
+
+.hero p {
+  color: var(--muted);
+  font-size: 1rem;
+  max-width: 480px;
+  margin: 0 auto 40px;
+  line-height: 1.6;
+}
+
+/* ===== OS DETECTION BADGE ===== */
+.detected-os {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 32px;
+}
+
+.detected-os .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green-bright);
+  flex-shrink: 0;
+}
+
+/* ===== DOWNLOAD BUTTON ===== */
+.download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, var(--green), var(--green-light));
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 18px 40px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(30,122,52,0.4);
+  margin-bottom: 16px;
+}
+
+.download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(30,122,52,0.5);
+}
+
+.download-btn .icon { font-size: 1.3rem; }
+
+.download-note {
+  font-size: 0.8rem;
+  color: var(--dim);
+  margin-bottom: 48px;
+}
+
+/* ===== OS TABS ===== */
+.os-section {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.os-section h2 {
+  font-size: 1rem;
+  color: var(--muted);
+  margin-bottom: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.os-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.os-tab {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  color: var(--muted);
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.os-tab:hover { border-color: var(--green); color: var(--text); }
+.os-tab.active { background: var(--hover); border-color: var(--green-light); color: var(--text); }
+
+/* ===== INSTRUCTIONS CARD ===== */
+.instructions {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: left;
+}
+
+.instructions h3 {
+  font-size: 1rem;
+  color: var(--gold);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.step:last-child { margin-bottom: 0; }
+
+.step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--green);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.step-text { font-size: 0.9rem; line-height: 1.6; color: var(--text); }
+.step-text strong { color: var(--gold-light); }
+.step-text .note { font-size: 0.8rem; color: var(--muted); margin-top: 3px; }
+
+.os-panel { display: none; }
+.os-panel.active { display: block; }
+
+/* ===== FEATURES ===== */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  max-width: 680px;
+  width: 100%;
+  margin: 48px auto 0;
+}
+
+.feature {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.feature .feat-icon { font-size: 1.3rem; margin-bottom: 6px; display: block; }
+.feature strong { color: var(--text); display: block; margin-bottom: 2px; }
+
+/* ===== FOOTER ===== */
+footer {
+  text-align: center;
+  padding: 24px;
+  font-size: 0.78rem;
+  color: var(--dim);
+  border-top: 1px solid var(--border);
+}
+
+/* ===== DOWNLOAD SUCCESS ===== */
+.success-banner {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  background: rgba(30,122,52,0.15);
+  border: 1px solid var(--green);
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 0.88rem;
+  color: var(--green-bright);
+  margin-bottom: 16px;
+  max-width: 480px;
+  width: 100%;
+}
+
+.success-banner.show { display: flex; }
+
+@media (max-width: 600px) {
+  .hero { padding: 40px 16px 30px; }
+  .download-btn { padding: 16px 28px; font-size: 1rem; }
+  .features { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <img src="https://carolinapreps.com/teams/assets/teams/frontend/logo/Bishop-England-Battling-Bishops.png"
+       alt="Bishop England" onerror="this.style.display='none'">
+  <div>
+    <div class="school">Bishop England High School</div>
+    <div class="sub">Science Olympiad &mdash; Division C &bull; Charleston, SC</div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <img src="https://carolinapreps.com/teams/assets/teams/frontend/logo/Bishop-England-Battling-Bishops.png"
+       class="hero-logo" alt="Battling Bishops" onerror="this.style.display='none'">
+
+  <h1>Science Olympiad<br><span>Team Manager</span></h1>
+  <p>The all-in-one management tool for the Bishop England Battling Bishops. Roster, events, practice logs, and more.</p>
+
+  <div class="detected-os">
+    <div class="dot"></div>
+    <span id="os-detected">Detecting your system...</span>
+  </div>
+
+  <div class="success-banner" id="success-banner">
+    &#10003; Download started! Follow the instructions below to open the app.
+  </div>
+
+  <a href="Science Olympiad Team Manager.html" download="Science Olympiad Team Manager.html"
+     class="download-btn" id="download-btn" onclick="onDownload()">
+    <span class="icon">&#11123;</span>
+    <span id="btn-label">Download Team Manager</span>
+  </a>
+
+  <div class="download-note">Single HTML file &bull; No install required &bull; Works offline &bull; Auto-saves everything</div>
+
+  <!-- OS INSTRUCTIONS -->
+  <div class="os-section">
+    <h2>How to open it on your computer</h2>
+
+    <div class="os-tabs">
+      <button class="os-tab" id="tab-windows" onclick="setOS('windows')">
+        <span>&#8862;</span> Windows
+      </button>
+      <button class="os-tab" id="tab-mac" onclick="setOS('mac')">
+        <span>&#63743;</span> Mac
+      </button>
+      <button class="os-tab" id="tab-chromebook" onclick="setOS('chromebook')">
+        <span>&#128187;</span> Chromebook
+      </button>
+      <button class="os-tab" id="tab-ipad" onclick="setOS('ipad')">
+        <span>&#128250;</span> iPad / iPhone
+      </button>
+    </div>
+
+    <div class="instructions">
+
+      <!-- WINDOWS -->
+      <div class="os-panel" id="panel-windows">
+        <h3>&#8862; Opening on Windows</h3>
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Click the <strong>Download Team Manager</strong> button above. Your browser will save the file to your <strong>Downloads</strong> folder.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">Open <strong>File Explorer</strong> (the folder icon on your taskbar) and go to <strong>Downloads</strong>.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text"><strong>Double-click</strong> the file named <strong>Science Olympiad Team Manager.html</strong>. It will open automatically in Chrome, Edge, or your default browser.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-text"><strong>Optional:</strong> Right-click the file &rarr; <strong>Send to &rarr; Desktop (create shortcut)</strong> so you can open it quickly every time.
+            <div class="note">Tip: Move the file out of Downloads to a permanent folder like Documents so it doesn&apos;t get deleted.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAC -->
+      <div class="os-panel" id="panel-mac">
+        <h3>&#63743; Opening on Mac</h3>
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Click <strong>Download Team Manager</strong> above. The file will appear in your <strong>Downloads</strong> folder (and in your browser's download bar at the bottom or top).</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">Open <strong>Finder</strong> &rarr; click <strong>Downloads</strong> on the left sidebar &rarr; find <strong>Science Olympiad Team Manager.html</strong>.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text"><strong>Double-click</strong> the file. It opens in Safari or Chrome automatically.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-text"><strong>Optional:</strong> Drag the file to your <strong>Desktop</strong> or <strong>Dock</strong> for easy access.
+            <div class="note">Tip: Move it to Documents so macOS doesn&apos;t remove it from Downloads after 30 days.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHROMEBOOK -->
+      <div class="os-panel" id="panel-chromebook">
+        <h3>&#128187; Opening on Chromebook</h3>
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Click <strong>Download Team Manager</strong> above. It will save to your <strong>Downloads</strong> folder.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">Open the <strong>Files</strong> app (bottom shelf) &rarr; tap <strong>Downloads</strong>.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">Click <strong>Science Olympiad Team Manager.html</strong> &mdash; it will open directly in Chrome.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-text"><strong>Optional:</strong> Right-click the file &rarr; <strong>Create shortcut</strong> to pin it to your shelf for quick access.</div>
+        </div>
+      </div>
+
+      <!-- IPAD -->
+      <div class="os-panel" id="panel-ipad">
+        <h3>&#128250; Opening on iPad / iPhone</h3>
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Tap <strong>Download Team Manager</strong> above. When prompted, tap <strong>&quot;Download&quot;</strong> to confirm.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">Tap the <strong>download arrow</strong> &#11123; in the top-right corner of Safari &rarr; tap the file name.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">The file will open in Safari. Tap the <strong>Share</strong> button &#8679; at the bottom &rarr; tap <strong>&quot;Add to Home Screen&quot;</strong> to create an icon for easy access.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-text">
+            <strong>Note:</strong> On iPad/iPhone the app runs in Safari. All data saves to Safari&apos;s storage.
+            <div class="note">For the best experience on mobile, use an iPad in landscape mode or a laptop/desktop.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FEATURES GRID -->
+  <div class="features">
+    <div class="feature">
+      <span class="feat-icon">&#128101;</span>
+      <strong>Roster Management</strong>
+      JV &amp; Varsity teams with member photos
+    </div>
+    <div class="feature">
+      <span class="feat-icon">&#128203;</span>
+      <strong>23 Events</strong>
+      All 2026 Division C events pre-loaded
+    </div>
+    <div class="feature">
+      <span class="feat-icon">&#9200;</span>
+      <strong>Practice Log</strong>
+      Manager logs sessions, hours, &amp; notes
+    </div>
+    <div class="feature">
+      <span class="feat-icon">&#127942;</span>
+      <strong>Tournament Tracker</strong>
+      Log invitational &amp; state results
+    </div>
+    <div class="feature">
+      <span class="feat-icon">&#128214;</span>
+      <strong>Study Resources</strong>
+      Tips &amp; links for every event
+    </div>
+    <div class="feature">
+      <span class="feat-icon">&#9729;</span>
+      <strong>Firebase Sync</strong>
+      Optional real-time sync across devices
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  Bishop England High School &bull; Battling Bishops Science Olympiad &bull; Division C &bull; South Carolina &bull; 2025&ndash;2026
+</footer>
+
+<script>
+// ===== OS DETECTION =====
+function detectOS() {
+  const ua = navigator.userAgent.toLowerCase();
+  const platform = navigator.platform ? navigator.platform.toLowerCase() : '';
+
+  if (/ipad|iphone|ipod/.test(ua)) return 'ipad';
+  if (/android/.test(ua)) return 'ipad'; // treat Android like iPad for now
+  if (/cros/.test(ua)) return 'chromebook';
+  if (/mac/.test(platform) || /macintosh/.test(ua)) return 'mac';
+  if (/win/.test(platform) || /windows/.test(ua)) return 'windows';
+  return 'windows'; // default
+}
+
+function setOS(os) {
+  // Update tabs
+  document.querySelectorAll('.os-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.os-panel').forEach(p => p.classList.remove('active'));
+  const tab = document.getElementById('tab-' + os);
+  const panel = document.getElementById('panel-' + os);
+  if (tab) tab.classList.add('active');
+  if (panel) panel.classList.add('active');
+}
+
+function onDownload() {
+  const banner = document.getElementById('success-banner');
+  banner.classList.add('show');
+  setTimeout(() => banner.classList.remove('show'), 6000);
+}
+
+// ===== INIT =====
+const os = detectOS();
+const osNames = { windows: 'Windows PC', mac: 'Mac', chromebook: 'Chromebook', ipad: 'iPad / iPhone' };
+document.getElementById('os-detected').textContent = 'Detected: ' + (osNames[os] || 'Computer');
+
+// Set button label per OS
+const labels = { windows: 'Download for Windows', mac: 'Download for Mac', chromebook: 'Download for Chromebook', ipad: 'Download for iPad / iPhone' };
+document.getElementById('btn-label').textContent = labels[os] || 'Download Team Manager';
+
+setOS(os);
+</script>
+</body>
+</html>
