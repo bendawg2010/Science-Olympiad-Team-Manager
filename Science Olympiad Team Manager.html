@@ -1,1 +1,2115 @@
-test
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bishop England Science Olympiad Team Manager</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<style>
+:root {
+  --bg: #0a1a0f; --bg-card: #111f16; --bg-surface: #162a1c; --bg-hover: #1c3424;
+  --green-primary: #1e7a34; --green-light: #27a349; --green-bright: #34d058;
+  --gold: #c9a227; --gold-light: #e6c94a; --text: #e8f5eb; --text-muted: #7fa88a;
+  --text-dim: #4a6b55; --border: #1e3a28; --border-light: #2a4a35;
+  --danger: #e05252; --warning: #f59e0b; --info: #38bdf8; --success: #34d058;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, sans-serif; min-height: 100vh; }
+a { color: var(--green-light); text-decoration: none; }
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { font-family: inherit; }
+h1,h2,h3,h4,h5,h6 { font-weight: 600; }
+.hidden { display: none !important; }
+#app { display: flex; min-height: 100vh; }
+#sidebar { width: 240px; background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; transition: transform 0.2s; overflow-y: auto; }
+#main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+#header { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+#content { flex: 1; padding: 24px; }
+.sidebar-logo { padding: 20px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+.sidebar-logo img { width: 40px; height: 40px; object-fit: contain; border-radius: 6px; }
+.sidebar-logo-text { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.3; }
+.sidebar-logo-sub { font-size: 11px; color: var(--text-muted); }
+.nav-list { list-style: none; padding: 12px 0; flex: 1; }
+.nav-item { display: block; }
+.nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: var(--text-muted); font-size: 14px; font-weight: 500; transition: all 0.15s; border-left: 3px solid transparent; cursor: pointer; }
+.nav-link:hover { background: var(--bg-hover); color: var(--text); }
+.nav-link.active { background: rgba(30,122,52,0.2); color: var(--green-bright); border-left-color: var(--green-bright); }
+.nav-link svg { width: 18px; height: 18px; flex-shrink: 0; }
+.sidebar-footer { padding: 12px 16px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-dim); }
+.sync-status { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim); }
+.sync-dot.synced { background: var(--success); }
+.sync-dot.syncing { background: var(--warning); animation: pulse 1s infinite; }
+.sync-dot.offline { background: var(--danger); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.header-left { display: flex; align-items: center; gap: 16px; }
+.page-title { font-size: 18px; font-weight: 700; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.team-toggle { display: flex; background: var(--bg-surface); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; }
+.team-btn { padding: 6px 16px; font-size: 13px; font-weight: 600; border: none; background: transparent; color: var(--text-muted); transition: all 0.15s; cursor: pointer; }
+.team-btn.active { background: var(--green-primary); color: white; }
+.saved-indicator { font-size: 12px; color: var(--success); opacity: 0; transition: opacity 0.3s; }
+.saved-indicator.show { opacity: 1; }
+.hamburger { display: none; flex-direction: column; gap: 5px; background: none; border: none; padding: 4px; cursor: pointer; }
+.hamburger span { display: block; width: 22px; height: 2px; background: var(--text); border-radius: 2px; transition: all 0.2s; }
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.stat-card { display: flex; flex-direction: column; gap: 6px; }
+.stat-value { font-size: 28px; font-weight: 700; color: var(--green-bright); }
+.stat-label { font-size: 13px; color: var(--text-muted); }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; border: none; transition: all 0.15s; cursor: pointer; }
+.btn-primary { background: var(--green-primary); color: white; }
+.btn-primary:hover { background: var(--green-light); }
+.btn-secondary { background: var(--bg-surface); color: var(--text); border: 1px solid var(--border-light); }
+.btn-secondary:hover { background: var(--bg-hover); }
+.btn-danger { background: var(--danger); color: white; }
+.btn-danger:hover { background: #c04040; }
+.btn-gold { background: var(--gold); color: #000; }
+.btn-gold:hover { background: var(--gold-light); }
+.btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+.btn-xs { padding: 3px 8px; font-size: 11px; border-radius: 4px; }
+.btn-icon { padding: 6px; border-radius: 6px; background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+.btn-icon:hover { background: var(--bg-hover); color: var(--text); }
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-green { background: rgba(52,208,88,0.15); color: var(--green-bright); }
+.badge-gold { background: rgba(201,162,39,0.2); color: var(--gold-light); }
+.badge-red { background: rgba(224,82,82,0.15); color: var(--danger); }
+.badge-yellow { background: rgba(245,158,11,0.15); color: var(--warning); }
+.badge-blue { background: rgba(56,189,248,0.15); color: var(--info); }
+.badge-gray { background: rgba(74,107,85,0.3); color: var(--text-muted); }
+.badge-purple { background: rgba(167,139,250,0.15); color: #a78bfa; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+.form-input { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 14px; transition: border-color 0.15s; }
+.form-input:focus { outline: none; border-color: var(--green-primary); }
+.form-input::placeholder { color: var(--text-dim); }
+.form-select { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 14px; cursor: pointer; }
+.form-select:focus { outline: none; border-color: var(--green-primary); }
+.form-select option { background: var(--bg-card); }
+.form-textarea { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 14px; resize: vertical; min-height: 80px; }
+.form-textarea:focus { outline: none; border-color: var(--green-primary); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
+.modal { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 16px; width: 100%; max-width: 580px; max-height: 90vh; overflow-y: auto; }
+.modal-lg { max-width: 740px; }
+.modal-xl { max-width: 900px; }
+.modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--bg-card); z-index: 2; border-radius: 16px 16px 0 0; }
+.modal-title { font-size: 16px; font-weight: 700; }
+.modal-body { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+.close-btn { background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; line-height: 1; padding: 2px 6px; border-radius: 4px; }
+.close-btn:hover { background: var(--bg-hover); color: var(--text); }
+.avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-sm { width: 28px; height: 28px; font-size: 11px; }
+.avatar-lg { width: 72px; height: 72px; font-size: 24px; }
+.members-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.member-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; transition: all 0.15s; cursor: pointer; }
+.member-card:hover { border-color: var(--green-primary); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
+.member-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.member-card-info h3 { font-size: 15px; font-weight: 600; }
+.member-card-info p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.member-card-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.member-stat { font-size: 12px; color: var(--text-muted); }
+.member-stat strong { display: block; color: var(--text); font-size: 14px; }
+.events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.event-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; transition: all 0.15s; cursor: pointer; }
+.event-card:hover { border-color: var(--green-primary); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
+.event-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.event-name { font-size: 14px; font-weight: 600; line-height: 1.3; }
+.event-card-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.event-card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid var(--border); }
+.event-members-row { display: flex; }
+.event-members-row .avatar-sm { margin-left: -8px; border: 2px solid var(--bg-card); }
+.event-members-row .avatar-sm:first-child { margin-left: 0; }
+.coverage-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+.coverage-item { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 12px; display: flex; align-items: center; gap: 8px; }
+.coverage-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.coverage-dot.none { background: var(--danger); }
+.coverage-dot.one { background: var(--warning); }
+.coverage-dot.full { background: var(--success); }
+.table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+thead { background: var(--bg-surface); }
+th { padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; cursor: pointer; user-select: none; }
+th:hover { color: var(--text); }
+td { padding: 10px 14px; border-top: 1px solid var(--border); vertical-align: middle; }
+tr:hover td { background: rgba(28,52,36,0.5); }
+.stars { display: flex; gap: 2px; }
+.star { color: var(--text-dim); font-size: 16px; cursor: pointer; transition: color 0.1s; }
+.star.filled { color: var(--gold); }
+.star:hover { color: var(--gold-light); }
+.activity-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.activity-item:last-child { border-bottom: none; }
+.activity-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green-primary); margin-top: 5px; flex-shrink: 0; }
+.activity-text { font-size: 13px; line-height: 1.5; }
+.activity-time { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.announcement-card { background: var(--bg-card); border-left: 4px solid var(--border); border-radius: 0 12px 12px 0; padding: 16px 20px; margin-bottom: 12px; border-right: 1px solid var(--border); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); transition: all 0.15s; }
+.announcement-card.high { border-left-color: var(--danger); }
+.announcement-card.medium { border-left-color: var(--warning); }
+.announcement-card.low { border-left-color: var(--info); }
+.announcement-card.pinned { border-left-color: var(--gold) !important; background: rgba(201,162,39,0.05); }
+.announcement-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.announcement-title { font-size: 15px; font-weight: 600; }
+.announcement-body { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+.announcement-meta { font-size: 11px; color: var(--text-dim); margin-top: 8px; }
+.accordion-item { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+.accordion-header { padding: 14px 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface); transition: background 0.15s; font-weight: 600; font-size: 14px; }
+.accordion-header:hover { background: var(--bg-hover); }
+.accordion-arrow { transition: transform 0.2s; color: var(--text-muted); font-size: 18px; }
+.accordion-item.open .accordion-arrow { transform: rotate(180deg); }
+.accordion-body { display: none; padding: 16px 18px; background: var(--bg-card); border-top: 1px solid var(--border); }
+.accordion-item.open .accordion-body { display: block; }
+.resource-link { display: flex; align-items: center; gap: 8px; color: var(--info); font-size: 13px; padding: 4px 0; transition: color 0.1s; }
+.resource-link:hover { color: var(--green-bright); }
+.tip-item { font-size: 13px; color: var(--text-muted); padding: 4px 0 4px 16px; position: relative; line-height: 1.5; }
+.tip-item::before { content: "\2022"; position: absolute; left: 4px; color: var(--green-primary); }
+.countdown-card { background: linear-gradient(135deg, rgba(30,122,52,0.2), rgba(201,162,39,0.1)); border: 1px solid var(--green-primary); border-radius: 12px; padding: 24px; text-align: center; }
+.countdown-label { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+.countdown-blocks { display: flex; justify-content: center; gap: 20px; }
+.countdown-block { text-align: center; min-width: 60px; }
+.countdown-num { font-size: 40px; font-weight: 800; color: var(--gold); line-height: 1; }
+.countdown-unit { font-size: 11px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+.empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+.empty-state h3 { font-size: 16px; margin-bottom: 8px; color: var(--text-dim); }
+.empty-state p { font-size: 13px; }
+.tournament-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 14px; }
+.tournament-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.tournament-name { font-size: 15px; font-weight: 700; }
+.placement-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.placement-item { background: var(--bg-surface); border-radius: 8px; padding: 8px 12px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; }
+.placement-num { font-weight: 700; color: var(--gold); }
+.filter-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+.filter-bar .form-input, .filter-bar .form-select { height: 36px; padding: 4px 10px; font-size: 13px; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.page-header h2 { font-size: 20px; }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.section-title { font-size: 15px; font-weight: 600; }
+.settings-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 18px; }
+.settings-section h3 { font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 10px; padding: 12px 18px; font-size: 13px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 10px; animation: slideIn 0.2s ease; max-width: 320px; pointer-events: all; }
+.toast.success { border-left: 4px solid var(--success); }
+.toast.error { border-left: 4px solid var(--danger); }
+.toast.warning { border-left: 4px solid var(--warning); }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.tabs { display: flex; gap: 2px; background: var(--bg-surface); border-radius: 8px; padding: 3px; margin-bottom: 18px; width: fit-content; }
+.tab-btn { padding: 6px 16px; border-radius: 6px; border: none; background: transparent; color: var(--text-muted); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.tab-btn.active { background: var(--green-primary); color: white; }
+.photo-upload-area { display: flex; align-items: center; gap: 14px; }
+.photo-preview { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-light); }
+.divider { height: 1px; background: var(--border); margin: 4px 0; }
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.gap-4 { gap: 16px; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.mt-1 { margin-top: 4px; }
+.mt-2 { margin-top: 8px; }
+.mt-3 { margin-top: 12px; }
+.mt-4 { margin-top: 16px; }
+.mb-2 { margin-bottom: 8px; }
+.text-sm { font-size: 13px; }
+.text-xs { font-size: 11px; }
+.text-muted { color: var(--text-muted); }
+.text-dim { color: var(--text-dim); }
+.text-gold { color: var(--gold); }
+.text-green { color: var(--green-bright); }
+.text-danger { color: var(--danger); }
+.font-bold { font-weight: 700; }
+.w-full { width: 100%; }
+.dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+.welcome-banner { background: linear-gradient(135deg, rgba(30,122,52,0.25) 0%, rgba(201,162,39,0.1) 100%); border: 1px solid var(--green-primary); border-radius: 16px; padding: 28px; margin-bottom: 24px; display: flex; align-items: center; gap: 20px; }
+.welcome-banner img { width: 80px; height: 80px; object-fit: contain; border-radius: 10px; }
+.welcome-text h2 { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.welcome-text p { font-size: 14px; color: var(--text-muted); }
+.next-tournament-card { background: linear-gradient(135deg, rgba(30,122,52,0.15), rgba(201,162,39,0.08)); border: 1px solid var(--border-light); border-radius: 12px; padding: 18px; }
+.quick-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+@media print { #sidebar, #header, .btn, .filter-bar, .quick-actions { display: none !important; } #main { margin-left: 0; } .member-card { break-inside: avoid; } }
+@media (max-width: 768px) { #sidebar { transform: translateX(-100%); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; } .hamburger { display: flex; } .form-row, .form-row-3 { grid-template-columns: 1fr; } .members-grid, .events-grid { grid-template-columns: 1fr; } #content { padding: 14px; } .countdown-blocks { gap: 10px; } .countdown-num { font-size: 28px; } .dashboard-grid { grid-template-columns: 1fr; } }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--green-primary); }
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
+.sidebar-overlay.show { display: block; }
+</style>
+</head>
+<body>
+<div id="app">
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <img src="https://carolinapreps.com/teams/assets/teams/frontend/logo/Bishop-England-Battling-Bishops.png" alt="BE Logo" onerror="this.style.display='none'">
+    <div><div class="sidebar-logo-text">Bishop England</div><div class="sidebar-logo-sub">Science Olympiad</div></div>
+  </div>
+  <ul class="nav-list" id="navList">
+    <li><a class="nav-link active" data-page="dashboard" onclick="navigate('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a></li>
+    <li><a class="nav-link" data-page="roster" onclick="navigate('roster')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Roster</a></li>
+    <li><a class="nav-link" data-page="events" onclick="navigate('events')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Events</a></li>
+    <li><a class="nav-link" data-page="assignments" onclick="navigate('assignments')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Assignments</a></li>
+    <li><a class="nav-link" data-page="practicelog" onclick="navigate('practicelog')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Practice Log</a></li>
+    <li><a class="nav-link" data-page="tournaments" onclick="navigate('tournaments')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M12 3a5 5 0 0 0 0 10M12 3v10"/><path d="M17 6h3a2 2 0 0 1 2 2v1a5 5 0 0 1-5 5M7 6H4a2 2 0 0 0-2 2v1a5 5 0 0 0 5 5"/></svg>Tournament Log</a></li>
+    <li><a class="nav-link" data-page="announcements" onclick="navigate('announcements')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Announcements</a></li>
+    <li><a class="nav-link" data-page="resources" onclick="navigate('resources')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Resources</a></li>
+    <li><a class="nav-link" data-page="settings" onclick="navigate('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M20 12h2M2 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg>Settings</a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <div class="sync-status"><div class="sync-dot" id="syncDot"></div><span id="syncLabel">localStorage</span></div>
+    <div style="margin-top:6px;font-size:10px;color:var(--text-dim);">Season 2025-2026</div>
+  </div>
+</nav>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div id="main">
+  <header id="header">
+    <div class="header-left">
+      <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu"><span></span><span></span><span></span></button>
+      <h1 class="page-title" id="pageTitle">Dashboard</h1>
+    </div>
+    <div class="header-right">
+      <span class="saved-indicator" id="savedIndicator">&#10003; Saved</span>
+      <div class="team-toggle">
+        <button class="team-btn active" id="btnJV" onclick="setTeam('JV')">JV</button>
+        <button class="team-btn" id="btnVarsity" onclick="setTeam('Varsity')">Varsity</button>
+      </div>
+    </div>
+  </header>
+  <main id="content"></main>
+</div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<div id="modalRoot"></div>
+
+<script>
+// ==================== DATA ====================
+const EVENTS_DATA = [
+  {
+    id: 'anatomy', name: 'Anatomy and Physiology', category: 'Life Science', type: 'Test',
+    description: 'Covers the Nervous System, Endocrine System, and Sense Organs. Participants answer questions about anatomy, physiology, and pathology of these systems.',
+    tips: [
+      'Focus on neuron structure and signal transmission pathways (action potentials, synapses)',
+      'Memorize all major hormones, their glands, target organs, and feedback mechanisms',
+      'Study the 5 sense organs in depth: structure, receptors, neural pathways to brain',
+      'Learn major nervous system disorders: MS, Parkinson's, Alzheimer's, ALS',
+      'Practice reading and labeling anatomical diagrams under time pressure',
+      'Use spaced repetition flashcards for hormone-gland-function associations'
+    ],
+    links: [
+      {text:'Khan Academy - Nervous System', url:'https://www.khanacademy.org/science/ap-biology/cell-communication-and-cell-cycle'},
+      {text:'Scioly.org Anatomy Wiki', url:'https://scioly.org/wiki/index.php/Anatomy_and_Physiology'},
+      {text:'Visible Body Atlas', url:'https://www.visiblebody.com/'},
+      {text:'NCBI Neuroscience Overview', url:'https://www.ncbi.nlm.nih.gov/books/NBK10943/'},
+      {text:'Khan Academy - Endocrine System', url:'https://www.khanacademy.org/science/health-and-medicine/endocrine-system-diseases'},
+      {text:'InnerBody - Nervous System', url:'https://www.innerbody.com/html/nerv.html'}
+    ]
+  },
+  {
+    id: 'astronomy', name: 'Astronomy', category: 'Earth Science', type: 'Test',
+    description: 'Covers stellar evolution, HR diagrams, deep sky objects (DSOs), galaxies, nebulae, and observational astronomy concepts.',
+    tips: [
+      'Master the Hertzsprung-Russell diagram: main sequence, giants, white dwarfs, stellar evolution paths',
+      'Study the stellar evolution sequence: nebula → protostar → main sequence → red giant → white dwarf/supernova',
+      'Learn Messier catalog objects: types, distances, constellations they're found in',
+      'Understand stellar classification (OBAFGKM) and what each tells you about temperature and color',
+      'Practice magnitude calculations, parallax distance formulas, and luminosity-distance relationships',
+      'Know the cosmic distance ladder: parallax, Cepheid variables, Type Ia supernovae'
+    ],
+    links: [
+      {text:'Scioly.org Astronomy Wiki', url:'https://scioly.org/wiki/index.php/Astronomy'},
+      {text:'NASA Stellar Evolution', url:'https://imagine.gsfc.nasa.gov/science/objects/stars1.html'},
+      {text:'HRD Simulator - University of Nebraska', url:'https://astro.unl.edu/naap/hr/hr.html'},
+      {text:'SEDS Messier Catalog', url:'https://www.messier.seds.org/'},
+      {text:'Khan Academy - Cosmology', url:'https://www.khanacademy.org/science/cosmology-and-astronomy'},
+      {text:'AAVSO Variable Stars', url:'https://www.aavso.org/education'}
+    ]
+  },
+  {
+    id: 'boomilever', name: 'Boomilever', category: 'Technology', type: 'Build',
+    description: 'Build a cantilevered structure anchored to a mounting board that holds as much weight as possible while minimizing the structure's own mass. Score = load/structure mass.',
+    tips: [
+      'Use balsa wood trusses — triangulated designs distribute load most efficiently',
+      'Epoxy joints are stronger than CA glue for high-stress connections; sand joint surfaces for best adhesion',
+      'Calculate your structure's theoretical max stress before building using beam theory formulas',
+      'Minimize mass everywhere: hollow out thick members, remove material from low-stress zones',
+      'Practice the measurement and mounting process so there's no lost time during competition',
+      'Test early and often — failure points reveal weak spots to redesign'
+    ],
+    links: [
+      {text:'Scioly.org Boomilever Wiki', url:'https://scioly.org/wiki/index.php/Boomilever'},
+      {text:'Balsa Wood Properties - Scioly', url:'https://scioly.org/wiki/index.php/Building_Materials'},
+      {text:'Truss Design Calculator', url:'https://skyciv.com/free-truss-calculator/'},
+      {text:'SkyCiv Structural Analysis', url:'https://skyciv.com/'},
+      {text:'Scioly Forums - Boomilever', url:'https://scioly.org/forums/viewforum.php?f=296'},
+      {text:'MIT OpenCourseWare - Structures', url:'https://ocw.mit.edu/courses/1-010-uncertainty-in-engineering-fall-2008/'}
+    ]
+  },
+  {
+    id: 'bungeedrop', name: 'Bungee Drop', category: 'Technology', type: 'Build',
+    description: 'Design a bungee system using rubber bands or elastic cord to drop a mass (150g) as close as possible to a target line without touching it or the ground.',
+    tips: [
+      'Use Hooke's Law and elastic potential energy equations to model your system: PE = 0.5kx²',
+      'Collect spring constant data for your elastic materials across different stretch lengths and temperatures',
+      'Account for the mass of the elastic material itself — it adds to effective drop weight',
+      'Test at competition height if possible; build a height-adjustable testing rig',
+      'Develop a lookup table relating cord length/number of bands to drop distance for fast adjustments',
+      'Practice the clamping and release mechanism until it works flawlessly every time'
+    ],
+    links: [
+      {text:'Scioly.org Bungee Drop Wiki', url:'https://scioly.org/wiki/index.php/Bungee_Drop'},
+      {text:'Khan Academy - Hooke's Law', url:'https://www.khanacademy.org/science/physics/work-and-energy/hookes-law'},
+      {text:'Physics Classroom - Elastic PE', url:'https://www.physicsclassroom.com/class/energy/Lesson-1/Elastic-Potential-Energy'},
+      {text:'Scioly Forums - Bungee Drop', url:'https://scioly.org/forums/viewforum.php?f=297'},
+      {text:'Desmos Graphing Calculator', url:'https://www.desmos.com/'},
+      {text:'Python Simulation Tutorial - Elastic', url:'https://realpython.com/python-physics-simulation/'}
+    ]
+  },
+  {
+    id: 'chemlab', name: 'Chem Lab', category: 'Physical Science', type: 'Hybrid',
+    description: 'Participants perform lab experiments and answer questions on chemical kinetics, stoichiometry, and reaction rates. Includes hands-on titrations and data analysis.',
+    tips: [
+      'Master stoichiometric calculations: mole ratios, limiting reagents, percent yield, empirical formulas',
+      'Understand rate laws: zero, first, and second order reactions; how to determine order from data',
+      'Practice titration technique until readings are accurate to ±0.05 mL consistently',
+      'Know the integrated rate laws and how to linearize data to find rate constants graphically',
+      'Study Arrhenius equation: relationship between temperature, activation energy, and rate constant',
+      'Bring a scientific calculator and know how to use regression functions quickly'
+    ],
+    links: [
+      {text:'Scioly.org Chem Lab Wiki', url:'https://scioly.org/wiki/index.php/Chemistry_Lab'},
+      {text:'Khan Academy - Kinetics', url:'https://www.khanacademy.org/science/ap-chemistry/kinetics-ap'},
+      {text:'ChemLibreTexts - Kinetics', url:'https://chem.libretexts.org/Bookshelves/Physical_and_Theoretical_Chemistry_Textbook_Maps/Physical_Chemistry_(LibreTexts)/17%3A_Chemical_Kinetics'},
+      {text:'MIT OCW Chemistry', url:'https://ocw.mit.edu/courses/5-111sc-principles-of-chemical-science-fall-2014/'},
+      {text:'Khan Academy - Stoichiometry', url:'https://www.khanacademy.org/science/ap-chemistry-beta/x2eef969c74e0d802:stoichiometry'},
+      {text:'ACS Publications - Kinetics Labs', url:'https://pubs.acs.org/journal/jchsed'}
+    ]
+  },
+  {
+    id: 'circuitlab', name: 'Circuit Lab', category: 'Physical Science', type: 'Hybrid',
+    description: 'Covers DC circuit analysis using Kirchhoff's laws, Ohm's law, and circuit theorems. Participants build, analyze, and troubleshoot circuits.',
+    tips: [
+      'Master Kirchhoff's Voltage Law (KVL) and Kirchhoff's Current Law (KCL) — practice multi-loop circuits',
+      'Know Thevenin and Norton equivalent circuit theorems for simplifying complex networks',
+      'Understand capacitors and inductors in DC circuits: charging/discharging, time constants (RC, RL)',
+      'Practice reading multimeters: voltage, current, resistance measurement techniques and safety',
+      'Build intuition for series vs. parallel: current same in series, voltage same in parallel',
+      'Study power calculations: P=IV=I²R=V²/R and maximum power transfer theorem'
+    ],
+    links: [
+      {text:'Scioly.org Circuit Lab Wiki', url:'https://scioly.org/wiki/index.php/Circuit_Lab'},
+      {text:'Khan Academy - Circuits', url:'https://www.khanacademy.org/science/ap-physics-2/ap-circuits-topic'},
+      {text:'All About Circuits', url:'https://www.allaboutcircuits.com/'},
+      {text:'PhET Circuit Simulator', url:'https://phet.colorado.edu/en/simulations/circuit-construction-kit-dc'},
+      {text:'Falstad Circuit Simulator', url:'https://www.falstad.com/circuit/'},
+      {text:'Electronics Tutorials', url:'https://www.electronics-tutorials.ws/'}
+    ]
+  },
+  {
+    id: 'codebusters', name: 'Codebusters', category: 'Physical Science', type: 'Test',
+    description: 'Cryptanalysis event covering multiple cipher types including Caesar, Vigenere, Aristocrat, Patristocrat, Hill, RSA, and more. Timed decryption challenges.',
+    tips: [
+      'Memorize English letter frequency order (ETAOIN SHRDLU) and common digraphs/trigraphs',
+      'Practice Aristocrat solving: identify single-letter words first (A, I), then short common words',
+      'Learn modular arithmetic thoroughly for Hill cipher and affine cipher calculations',
+      'For Vigenere, master the Kasiski test and Index of Coincidence to find key length',
+      'Practice RSA: extended Euclidean algorithm, modular exponentiation, finding p/q from n',
+      'Speed is critical — practice each cipher type separately with timed drills'
+    ],
+    links: [
+      {text:'Scioly.org Codebusters Wiki', url:'https://scioly.org/wiki/index.php/Codebusters'},
+      {text:'CryptoClub - Cryptanalysis', url:'https://cryptoclub.org/'},
+      {text:'dCode.fr Cipher Tools', url:'https://www.dcode.fr/en'},
+      {text:'Art of the Problem - Cryptography', url:'https://www.youtube.com/watch?v=AQDCe585Lnc'},
+      {text:'Khan Academy - Cryptography', url:'https://www.khanacademy.org/computing/computer-science/cryptography'},
+      {text:'CrypTool Cipher Practice', url:'https://www.cryptool.org/en/'}
+    ]
+  },
+  {
+    id: 'designergenes', name: 'Designer Genes', category: 'Life Science', type: 'Test',
+    description: 'Covers molecular genetics and biotechnology including gene editing (CRISPR), PCR, gel electrophoresis, gene expression, epigenetics, and genomics.',
+    tips: [
+      'Understand CRISPR-Cas9 mechanism in detail: guide RNA design, PAM sequences, DNA repair pathways',
+      'Master PCR: denaturation, annealing, extension temperatures and their purposes',
+      'Know gel electrophoresis: how DNA migrates by size, how to read gels, restriction mapping',
+      'Study gene expression regulation: promoters, enhancers, transcription factors, epigenetic marks',
+      'Learn biotechnology applications: GMOs, gene therapy, recombinant proteins, synthetic biology',
+      'Practice pedigree analysis and inheritance problems including incomplete dominance and epistasis'
+    ],
+    links: [
+      {text:'Scioly.org Designer Genes Wiki', url:'https://scioly.org/wiki/index.php/Designer_Genes'},
+      {text:'Khan Academy - Molecular Biology', url:'https://www.khanacademy.org/science/ap-biology/gene-expression-and-regulation'},
+      {text:'Learn.Genetics - DNA', url:'https://learn.genetics.utah.edu/'},
+      {text:'HHMI BioInteractive - CRISPR', url:'https://www.biointeractive.org/classroom-resources/crispr-cas9-mechanism'},
+      {text:'NCBI Genetics Resources', url:'https://www.ncbi.nlm.nih.gov/guide/genes-expression/'},
+      {text:'Nature Scitable - Genetics', url:'https://www.nature.com/scitable/topic/genetics-5/'}
+    ]
+  },
+  {
+    id: 'diseasedetectives', name: 'Disease Detectives', category: 'Life Science', type: 'Test',
+    description: 'Epidemiology event covering outbreak investigation, study design, disease transmission, statistical analysis, and public health concepts.',
+    tips: [
+      'Learn all epidemiological study designs: cohort, case-control, cross-sectional, RCT — know their strengths and biases',
+      'Calculate and interpret: attack rate, relative risk, odds ratio, attributable risk, NNT',
+      'Understand epidemic curves: point source vs. propagated outbreaks, incubation period estimation',
+      'Know CDC outbreak investigation steps in order (verify diagnosis → case definition → case finding → etc.)',
+      'Study major diseases: modes of transmission, reservoirs, incubation periods, prevention strategies',
+      'Practice making and interpreting 2x2 contingency tables quickly'
+    ],
+    links: [
+      {text:'Scioly.org Disease Detectives Wiki', url:'https://scioly.org/wiki/index.php/Disease_Detectives'},
+      {text:'CDC Epidemiology Resources', url:'https://www.cdc.gov/training/SIC_CaseStudy/'},
+      {text:'Principles of Epidemiology - CDC', url:'https://www.cdc.gov/csels/dsepd/ss1978/'},
+      {text:'Khan Academy - Infectious Disease', url:'https://www.khanacademy.org/science/health-and-medicine/infectious-diseases'},
+      {text:'WHO Outbreak Investigation', url:'https://www.who.int/topics/disease_outbreaks/en/'},
+      {text:'EIS Outbreak Studies - CDC', url:'https://www.cdc.gov/eis/index.html'}
+    ]
+  },
+  {
+    id: 'dynamicplanet', name: 'Dynamic Planet', category: 'Earth Science', type: 'Test',
+    description: '2026 topic: Glaciers and Glaciation. Covers glacier types, formation, movement, erosional and depositional landforms, ice cores, sea level change, and climate connections.',
+    tips: [
+      'Know all glacier types: alpine, piedmont, outlet, ice sheet, ice cap — formation and flow differences',
+      'Study glacial erosion landforms: cirques, arêtes, horns, U-shaped valleys, fjords, roche moutonnée',
+      'Learn depositional features: moraines (terminal/lateral/medial/ground), drumlins, eskers, kames, kettles',
+      'Understand glacial mass balance: accumulation zone, ablation zone, equilibrium line altitude (ELA)',
+      'Know how ice cores are used: trapped air bubbles, isotope ratios (δ¹⁸O) for climate reconstruction',
+      'Study glacial isostasy: how land responds to ice sheet loading and unloading (post-glacial rebound)'
+    ],
+    links: [
+      {text:'Scioly.org Dynamic Planet Wiki', url:'https://scioly.org/wiki/index.php/Dynamic_Planet'},
+      {text:'USGS Glaciers and Ice Sheets', url:'https://www.usgs.gov/science/science-explorer/water/glaciers-ice-sheets'},
+      {text:'NSIDC Glacier Glossary', url:'https://nsidc.org/cryosphere/glossary'},
+      {text:'NASA Climate - Glaciers', url:'https://climate.nasa.gov/vital-signs/ice-sheets/'},
+      {text:'AntarcticGlaciers.org', url:'https://www.antarcticglaciers.org/'},
+      {text:'USGS Glacial Landforms', url:'https://www.usgs.gov/programs/climate-research-development-program/science/glacial-landforms'}
+    ]
+  },
+  {
+    id: 'electricvehicle', name: 'Electric Vehicle', category: 'Technology', type: 'Build',
+    description: 'Design a battery-powered vehicle that travels a target distance and stops as close as possible to a target line. Speed and precision both matter.',
+    tips: [
+      'Build a reliable braking system first — friction, magnetic, or mechanical brakes must engage consistently',
+      'Create a lookup table: battery voltage vs. distance traveled across multiple trials',
+      'Use encoder wheels or timed cutoffs to achieve repeatable distances',
+      'Account for battery discharge: fresh vs. used batteries give different distances — test with competition-spec batteries',
+      'Reduce rolling friction: align wheels precisely, use ball bearings if allowed, minimize weight',
+      'Practice the full competition sequence including measuring, adjusting, and running under time pressure'
+    ],
+    links: [
+      {text:'Scioly.org Electric Vehicle Wiki', url:'https://scioly.org/wiki/index.php/Electric_Vehicle'},
+      {text:'Scioly Forums - EV Build Tips', url:'https://scioly.org/forums/viewforum.php?f='},
+      {text:'Khan Academy - Electric Circuits', url:'https://www.khanacademy.org/science/physics/circuits-topic'},
+      {text:'Pololu Robotics & Electronics', url:'https://www.pololu.com/'},
+      {text:'SparkFun Electronics', url:'https://www.sparkfun.com/'},
+      {text:'Physics Classroom - DC Circuits', url:'https://www.physicsclassroom.com/class/circuits'}
+    ]
+  },
+  {
+    id: 'engineeringcad', name: 'Engineering CAD', category: 'Technology', type: 'Hybrid',
+    description: 'Participants use Onshape CAD software to create 3D models and 2D engineering drawings from given specifications. Covers GD&T, views, and tolerancing.',
+    tips: [
+      'Practice daily in Onshape: extrude, revolve, loft, sweep, fillet, chamfer, shell, mirror, pattern',
+      'Learn parametric design: use variables/configurations so dimensions can be changed globally',
+      'Master 2D drawing creation: orthographic views, isometric, section views, auxiliary views',
+      'Study GD&T symbols: flatness, straightness, circularity, cylindricity, perpendicularity, runout',
+      'Practice assembly features: mates (fastened, revolute, slider, planar) and how to constrain correctly',
+      'Use Onshape's FeatureScript for custom features; learn keyboard shortcuts to work faster'
+    ],
+    links: [
+      {text:'Scioly.org Engineering CAD Wiki', url:'https://scioly.org/wiki/index.php/Engineering_Design'},
+      {text:'Onshape Learning Center', url:'https://learn.onshape.com/'},
+      {text:'Onshape - Free Education Account', url:'https://www.onshape.com/en/education/'},
+      {text:'GD&T Basics', url:'https://www.gdandtbasics.com/'},
+      {text:'MIT OCW - Engineering Drawing', url:'https://ocw.mit.edu/courses/2-00aj-exploring-sea-space-earth-fundamentals-of-engineering-design-spring-2009/'},
+      {text:'Engineers Edge - GD&T', url:'https://www.engineersedge.com/gdt.htm'}
+    ]
+  },
+  {
+    id: 'entomology', name: 'Entomology', category: 'Life Science', type: 'Test',
+    description: 'Insect identification, classification, anatomy, ecology, and behavior. Participants identify specimens and answer questions about insect biology.',
+    tips: [
+      'Master all 30+ insect orders: key diagnostic features, complete vs. incomplete metamorphosis, common families',
+      'Learn insect morphology: head/thorax/abdomen landmarks, wing venation patterns for major orders',
+      'Study economic importance: beneficial insects (pollinators, decomposers) and agricultural pests',
+      'Practice identification using dichotomous keys — use them quickly and accurately',
+      'Know insect ecology: food webs, aquatic insects (EPT taxa) as water quality indicators',
+      'Create a specimen collection if possible — physical specimens cement ID skills'
+    ],
+    links: [
+      {text:'Scioly.org Entomology Wiki', url:'https://scioly.org/wiki/index.php/Entomology'},
+      {text:'BugGuide.net', url:'https://bugguide.net/'},
+      {text:'Entomology Today', url:'https://entomologytoday.org/'},
+      {text:'iNaturalist - Insects', url:'https://www.inaturalist.org/taxa/47158-Insecta'},
+      {text:'Field Station - Insect Orders', url:'https://www.fieldstation.edu/'},
+      {text:'USDA Forest Service - Insects', url:'https://www.fs.usda.gov/science-technology/invasive-species/insects'}
+    ]
+  },
+  {
+    id: 'experimentaldesign', name: 'Experimental Design', category: 'Inquiry', type: 'Hybrid',
+    description: 'Teams design and conduct an experiment on-site using provided materials. Must identify variables, write hypothesis, collect data, and analyze results.',
+    tips: [
+      'Practice the scientific method until it's automatic: question, hypothesis, variables, procedure, data, analysis, conclusion',
+      'Always identify: independent variable (what you change), dependent variable (what you measure), constants (what you control)',
+      'Include at least 3 trials per condition and calculate mean, standard deviation, and percent error',
+      'Write clear, numbered procedures that another person could follow exactly without clarification',
+      'Practice statistical analysis: t-tests, chi-square when appropriate; know when each applies',
+      'Time your experiment planning sessions — at competition, planning time is strictly limited'
+    ],
+    links: [
+      {text:'Scioly.org Experimental Design Wiki', url:'https://scioly.org/wiki/index.php/Experimental_Design'},
+      {text:'Khan Academy - Statistics', url:'https://www.khanacademy.org/math/statistics-probability'},
+      {text:'Statistics How To', url:'https://www.statisticshowto.com/'},
+      {text:'Science Buddies - Scientific Method', url:'https://www.sciencebuddies.org/science-fair-projects/science-fair/steps-of-the-scientific-method'},
+      {text:'NIST Handbook of Statistical Methods', url:'https://www.itl.nist.gov/div898/handbook/'},
+      {text:'AmeriStat - Data Analysis', url:'https://www.prb.org/'}
+    ]
+  },
+  {
+    id: 'forensics', name: 'Forensics', category: 'Life Science', type: 'Hybrid',
+    description: 'Crime scene evidence analysis including fingerprints, serology, chromatography, soil/fiber analysis, questioned documents, and forensic entomology.',
+    tips: [
+      'Know all fingerprint types: loop (radial/ulnar), whorl, arch — and ridge characteristics (minutiae)',
+      'Study blood spatter analysis: impact angle, area of origin, velocity classification',
+      'Practice chromatography: Rf value calculations, how to distinguish ink/pigment samples',
+      'Learn forensic serology: ABO blood typing, Kastle-Meyer test, luminol, Bluestar',
+      'Understand chain of custody, Locard's principle, and forensic lab procedures',
+      'Study forensic entomology: blow fly life cycle stages and PMI estimation'
+    ],
+    links: [
+      {text:'Scioly.org Forensics Wiki', url:'https://scioly.org/wiki/index.php/Forensics'},
+      {text:'FBI Forensic Science', url:'https://www.fbi.gov/services/laboratory'},
+      {text:'Khan Academy - Forensic Science', url:'https://www.khanacademy.org/partner-content/mit-k12/mit-k12-life-science/v/forensic-science'},
+      {text:'Forensic Science International', url:'https://www.forensicscienceinternational.com/'},
+      {text:'Crime Scene Investigator Network', url:'https://www.crime-scene-investigator.net/'},
+      {text:'SWGMAT Guidelines', url:'https://www.swgmat.org/'}
+    ]
+  },
+  {
+    id: 'helicopter', name: 'Helicopter', category: 'Technology', type: 'Build',
+    description: 'Design and build a rubber-powered helicopter that achieves maximum flight time. Optimizing rotor design, rubber motor, and weight distribution are key.',
+    tips: [
+      'Longer, wider rotor blades with proper pitch generate more lift but add weight — find the optimal balance',
+      'Lubricate rubber motors with silicone or rubber lube to get more turns without breaking',
+      'Use a winder to consistently apply the same number of winds for reproducible flight times',
+      'Build multiple motors with different cross-sections and test each for max flight time',
+      'Minimize structural weight: use 1/16" balsa spars, lightweight tissue or mylar for blade skin',
+      'Study propeller aerodynamics: angle of attack, Reynolds number effects at small scale'
+    ],
+    links: [
+      {text:'Scioly.org Helicopter Wiki', url:'https://scioly.org/wiki/index.php/Helicopter'},
+      {text:'AeroFred Free Plans', url:'https://www.aerofredplans.com/'},
+      {text:'FAI F1 Rubber Models', url:'https://www.fai.org/'},
+      {text:'Indoor Flying Models Resources', url:'https://www.indoorflyingmodels.com/'},
+      {text:'NASA Aeronautics Education', url:'https://www.nasa.gov/audience/foreducators/aeronautics/home/'},
+      {text:'PhysLink - Aerodynamics', url:'https://www.physlink.com/Education/AskExperts/ae546.cfm'}
+    ]
+  },
+  {
+    id: 'hovercraft', name: 'Hovercraft', category: 'Technology', type: 'Build',
+    description: 'Build an air-cushion vehicle that travels a target distance on a smooth surface. Score based on accuracy of stopping distance to target.',
+    tips: [
+      'Skirt design is critical: plenum chamber skirts provide more stable cushion than simple annular skirts',
+      'Use a high-RPM motor with appropriate fan blade pitch — test static thrust with a scale',
+      'Minimize surface contact friction: smooth bottom surface, appropriate skirt material (ripstop nylon)',
+      'Build a data table: fan settings vs. distance traveled across multiple trial surfaces',
+      'Account for air currents in the competition space — practice in similar conditions',
+      'Control weight distribution: center of mass should be directly above center of lift'
+    ],
+    links: [
+      {text:'Scioly.org Hovercraft Wiki', url:'https://scioly.org/wiki/index.php/Hovercraft'},
+      {text:'Universal Hovercraft', url:'https://www.hovercraft.com/'},
+      {text:'Khan Academy - Fluid Dynamics', url:'https://www.khanacademy.org/science/physics/fluids'},
+      {text:'NASA - Bernoulli Principle', url:'https://www.grc.nasa.gov/WWW/k-12/airplane/bern.html'},
+      {text:'Scioly Forums - Hovercraft', url:'https://scioly.org/forums/'},
+      {text:'Physics of Hovercrafts - HowStuffWorks', url:'https://science.howstuffworks.com/transport/engines-equipment/hovercraft.htm'}
+    ]
+  },
+  {
+    id: 'machines', name: 'Machines', category: 'Physical Science', type: 'Hybrid',
+    description: 'Covers simple and compound machines, including levers, pulleys, inclined planes, wheel and axle, and screws. Includes building a lever device.',
+    tips: [
+      'Master mechanical advantage calculations for all 6 simple machines — ideal vs. actual MA',
+      'Understand efficiency: output work / input work × 100, and sources of energy loss (friction)',
+      'Learn pulley systems: fixed, movable, block and tackle — calculate MA and rope lengths',
+      'For lever device: practice measuring fulcrum positions and predicting equilibrium quickly',
+      'Study gear ratios, torque multiplication, and power transmission in compound machines',
+      'Practice torque calculations: τ = r × F, and lever equilibrium Σtorques = 0'
+    ],
+    links: [
+      {text:'Scioly.org Machines Wiki', url:'https://scioly.org/wiki/index.php/Machines'},
+      {text:'Khan Academy - Work and Simple Machines', url:'https://www.khanacademy.org/science/physics/work-and-energy'},
+      {text:'Physics Classroom - Simple Machines', url:'https://www.physicsclassroom.com/class/energy/Lesson-1/Work-and-Machines'},
+      {text:'Edheads - Simple Machines', url:'https://www.edheads.org/activities/simple-machines/'},
+      {text:'HyperPhysics - Levers', url:'http://hyperphysics.phy-astr.gsu.edu/hbase/torq2.html'},
+      {text:'PhET - Balancing Act', url:'https://phet.colorado.edu/en/simulations/balancing-act'}
+    ]
+  },
+  {
+    id: 'materialscience', name: 'Material Science', category: 'Physical Science', type: 'Test',
+    description: 'Covers properties and applications of metals, polymers, ceramics, composites, semiconductors, and nanomaterials. Focus on structure-property relationships.',
+    tips: [
+      'Study crystal structures: FCC, BCC, HCP — how they affect ductility, strength, and slip systems',
+      'Know phase diagrams: binary alloy systems, eutectic point, lever rule for phase fraction calculation',
+      'Learn polymers: thermoplastics vs. thermosets, crystallinity, glass transition temperature (Tg)',
+      'Understand ceramic properties: ionic/covalent bonding, high hardness/brittleness, piezoelectricity',
+      'Study composite materials: rule of mixtures for properties, types of reinforcement (fibers, particles)',
+      'Know failure mechanisms: ductile vs. brittle fracture, fatigue, creep, corrosion types'
+    ],
+    links: [
+      {text:'Scioly.org Material Science Wiki', url:'https://scioly.org/wiki/index.php/Material_Science'},
+      {text:'DoITPoMS - Cambridge Materials', url:'https://www.doitpoms.ac.uk/'},
+      {text:'MIT OpenCourseWare - Materials', url:'https://ocw.mit.edu/courses/3-091sc-introduction-to-solid-state-chemistry-fall-2010/'},
+      {text:'Khan Academy - Materials Science', url:'https://www.khanacademy.org/science/ap-chemistry-beta/'},
+      {text:'ASM International - Materials', url:'https://www.asminternational.org/'},
+      {text:'NIST Materials Data', url:'https://www.nist.gov/mml/materials-science-engineering-division'}
+    ]
+  },
+  {
+    id: 'quantumdetanglers', name: 'Quantum Detanglers', category: 'Physical Science', type: 'Test',
+    description: 'Covers quantum mechanics fundamentals including qubits, superposition, entanglement, quantum gates, quantum computing basics, and quantum cryptography.',
+    tips: [
+      'Understand qubit states: |0⟩ and |1⟩ basis states, Bloch sphere representation, superposition',
+      'Learn quantum gates: Hadamard (H), Pauli-X/Y/Z, CNOT, Toffoli — their matrix representations and effects',
+      'Study quantum entanglement: Bell states, EPR paradox, no-cloning theorem implications',
+      'Know quantum algorithms: Grover's search (√N speedup), Shor's factoring (exponential speedup)',
+      'Understand wave-particle duality, uncertainty principle (ΔxΔp ≥ ℏ/2), and Schrödinger's equation basics',
+      'Study quantum error correction: why qubits decohere and how topological codes help'
+    ],
+    links: [
+      {text:'Scioly.org Quantum Detanglers Wiki', url:'https://scioly.org/wiki/index.php/Quantum_Quandary'},
+      {text:'IBM Quantum Learning', url:'https://learning.quantum.ibm.com/'},
+      {text:'Quantum Country - Spaced Repetition', url:'https://quantum.country/'},
+      {text:'Khan Academy - Quantum Physics', url:'https://www.khanacademy.org/science/physics/quantum-physics'},
+      {text:'Quirk - Quantum Circuit Simulator', url:'https://algassert.com/quirk'},
+      {text:'MIT OCW - Quantum Physics', url:'https://ocw.mit.edu/courses/8-04-quantum-physics-i-spring-2016/'}
+    ]
+  },
+  {
+    id: 'remotesensing', name: 'Remote Sensing', category: 'Earth Science', type: 'Test',
+    description: 'Covers satellite imagery interpretation, aerial photography analysis, GPS/GIS, electromagnetic spectrum for remote sensing, and applications in environmental monitoring.',
+    tips: [
+      'Learn to interpret false-color composites: NIR-R-G composites for vegetation (NDVI), urban, water',
+      'Study spatial resolution, temporal resolution, spectral resolution trade-offs for different sensors',
+      'Know major satellite platforms: Landsat, MODIS, Sentinel, GOES, AVHRR — their specifications',
+      'Understand the electromagnetic spectrum used in RS: visible, NIR, SWIR, thermal IR, radar (SAR)',
+      'Practice reading topographic maps and USGS quads: contour interpretation, scale, UTM coordinates',
+      'Study GIS concepts: raster vs. vector data, projections, coordinate systems, overlay analysis'
+    ],
+    links: [
+      {text:'Scioly.org Remote Sensing Wiki', url:'https://scioly.org/wiki/index.php/Remote_Sensing'},
+      {text:'NASA Earth Observatory', url:'https://earthobservatory.nasa.gov/'},
+      {text:'USGS Remote Sensing', url:'https://www.usgs.gov/core-science-systems/nli/landsat'},
+      {text:'ESRI GIS Dictionary', url:'https://support.esri.com/en/other-resources/gis-dictionary'},
+      {text:'Remote Sensing Tutorial - NASA', url:'https://www.remote-sensing.info/'},
+      {text:'Google Earth Engine', url:'https://earthengine.google.com/'}
+    ]
+  },
+  {
+    id: 'rocksminerals', name: 'Rocks and Minerals', category: 'Earth Science', type: 'Test',
+    description: 'Identification of rocks and minerals by physical properties, along with petrology, mineralogy, and Earth materials questions.',
+    tips: [
+      'Practice mineral identification using all properties: luster, hardness (Mohs scale), cleavage/fracture, color, streak, specific gravity, special properties',
+      'Know all rock types: igneous (intrusive/extrusive), sedimentary (clastic/chemical/organic), metamorphic (foliated/non-foliated)',
+      'Study rock-forming mineral groups: silicates (nesosilicates through tectosilicates), carbonates, oxides, sulfides, halides',
+      'Learn the Bowen's Reaction Series and what it tells you about mineral crystallization order',
+      'Practice identifying hand specimens — description and identification speed matters',
+      'Know major rock uses and economic minerals: ores, gemstones, industrial minerals'
+    ],
+    links: [
+      {text:'Scioly.org Rocks and Minerals Wiki', url:'https://scioly.org/wiki/index.php/Rocks_and_Minerals'},
+      {text:'Mindat.org - Mineral Database', url:'https://www.mindat.org/'},
+      {text:'USGS Minerals Resources', url:'https://www.usgs.gov/centers/national-minerals-information-center'},
+      {text:'Khan Academy - Earth Science', url:'https://www.khanacademy.org/science/cosmology-and-astronomy/earth-geological-topics-topic'},
+      {text:'Geology.com - Rock Types', url:'https://geology.com/rocks/'},
+      {text:'Smithsonian Gem & Mineral Collection', url:'https://naturalhistory.si.edu/research/geology/geologic-resources/rocks-and-minerals'}
+    ]
+  },
+  {
+    id: 'robottour', name: 'Robot Tour', category: 'Technology', type: 'Build',
+    description: 'Program an autonomous robot to navigate a course and stop at specific waypoints. Teams pre-program the robot; no remote control is permitted during the run.',
+    tips: [
+      'Use PID control for straight-line movement and precise turns — tune Kp, Ki, Kd parameters systematically',
+      'Calibrate encoders precisely: measure actual wheel circumference and use that for distance calculations',
+      'Build a path planning algorithm that accounts for accumulated error over long courses',
+      'Use gyroscope/IMU for heading correction during straight-line travel',
+      'Practice the full programming and testing cycle within competition time constraints',
+      'Create a modular code structure: separate movement primitives from path definition for easy adjustment'
+    ],
+    links: [
+      {text:'Scioly.org Robot Tour Wiki', url:'https://scioly.org/wiki/index.php/Robot_Tour'},
+      {text:'Arduino Programming Guide', url:'https://www.arduino.cc/en/Guide'},
+      {text:'PID Control Tutorial', url:'https://www.pidexplained.com/'},
+      {text:'VEX Robotics Resources', url:'https://www.vexrobotics.com/vexiq/resources'},
+      {text:'FIRST Robotics Programming', url:'https://docs.wpilib.org/'},
+      {text:'Pololu Motor Controllers', url:'https://www.pololu.com/category/94/motor-controllers'}
+    ]
+  }
+];
+
+const STATE_KEY = 'be_scioly_v2';
+let state = {
+  team: 'JV',
+  members: [],
+  assignments: {},
+  practiceLogs: [],
+  tournaments: [],
+  announcements: [],
+  eventRatings: {},
+  settings: { teamName: 'Bishop England', coachName: '', season: '2025-2026', firebase: {} }
+};
+let db = null;
+let sortConfig = { key: 'name', dir: 'asc' };
+let saveDebounce = null;
+
+// ==================== FIREBASE ====================
+function initFirebase() {
+  const fc = state.settings.firebase;
+  if (!fc || !fc.apiKey || !fc.projectId) { updateSyncStatus('offline'); return; }
+  try {
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: fc.apiKey, authDomain: fc.authDomain, projectId: fc.projectId,
+        storageBucket: fc.storageBucket, messagingSenderId: fc.messagingSenderId, appId: fc.appId
+      });
+    }
+    db = firebase.firestore();
+    updateSyncStatus('synced');
+    setupFirestoreListeners();
+    toast('Firebase connected', 'success');
+  } catch(e) { console.error(e); updateSyncStatus('offline'); toast('Firebase error: ' + e.message, 'error'); }
+}
+
+function updateSyncStatus(status) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  if (!dot || !lbl) return;
+  dot.className = 'sync-dot ' + status;
+  const labels = { synced: 'Synced', syncing: 'Syncing...', offline: 'localStorage' };
+  lbl.textContent = labels[status] || 'localStorage';
+}
+
+function teamPath() { return 'teams/be_scioly_2026'; }
+
+async function syncToFirestore() {
+  if (!db) return;
+  updateSyncStatus('syncing');
+  try {
+    const batch = db.batch();
+    const tp = teamPath();
+    batch.set(db.doc(tp + '/meta/config'), { teamName: state.settings.teamName, season: state.settings.season, coachName: state.settings.coachName, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    await batch.commit();
+    state.members.forEach(async m => { await db.doc(tp + '/members/' + m.id).set(m); });
+    Object.keys(state.assignments).forEach(async eid => { await db.doc(tp + '/assignments/' + eid).set({ members: state.assignments[eid] }); });
+    state.practiceLogs.forEach(async l => { await db.doc(tp + '/progress/' + l.id).set(l); });
+    state.tournaments.forEach(async t => { await db.doc(tp + '/tournaments/' + t.id).set(t); });
+    state.announcements.forEach(async a => { await db.doc(tp + '/announcements/' + a.id).set(a); });
+    updateSyncStatus('synced');
+  } catch(e) { console.error(e); updateSyncStatus('offline'); }
+}
+
+function setupFirestoreListeners() {
+  if (!db) return;
+  const tp = teamPath();
+  db.collection(tp + '/members').onSnapshot(snap => {
+    state.members = snap.docs.map(d => d.data());
+    renderCurrentPage();
+  });
+  db.collection(tp + '/announcements').onSnapshot(snap => {
+    state.announcements = snap.docs.map(d => d.data());
+    if (currentPage === 'announcements') renderCurrentPage();
+  });
+}
+
+// ==================== STATE MANAGEMENT ====================
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STATE_KEY);
+    if (saved) { const parsed = JSON.parse(saved); state = Object.assign(state, parsed); }
+  } catch(e) { console.error('Load error:', e); }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STATE_KEY, JSON.stringify(state));
+    showSaved();
+    if (db) { clearTimeout(window._fsync); window._fsync = setTimeout(syncToFirestore, 2000); }
+  } catch(e) { console.error('Save error:', e); }
+}
+
+function showSaved() {
+  const el = document.getElementById('savedIndicator');
+  if (!el) return;
+  el.classList.add('show');
+  clearTimeout(window._savedTimer);
+  window._savedTimer = setTimeout(() => el.classList.remove('show'), 1500);
+}
+
+function debouncedSave() { clearTimeout(saveDebounce); saveDebounce = setTimeout(saveState, 300); }
+
+// ==================== NAVIGATION ====================
+let currentPage = 'dashboard';
+const pageTitles = {
+  dashboard: 'Dashboard', roster: 'Roster', events: 'Events', assignments: 'Assignments',
+  practicelog: 'Practice Log', tournaments: 'Tournament Log', announcements: 'Announcements',
+  resources: 'Resources', settings: 'Settings'
+};
+
+function navigate(page) {
+  currentPage = page;
+  document.getElementById('pageTitle').textContent = pageTitles[page] || page;
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.page === page));
+  if (window.innerWidth <= 768) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('show'); }
+  renderCurrentPage();
+}
+
+function renderCurrentPage() {
+  const content = document.getElementById('content');
+  if (!content) return;
+  const renders = {
+    dashboard: renderDashboard, roster: renderRoster, events: renderEvents,
+    assignments: renderAssignments, practicelog: renderPracticeLog, tournaments: renderTournaments,
+    announcements: renderAnnouncements, resources: renderResources, settings: renderSettings
+  };
+  if (renders[currentPage]) renders[currentPage](content);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+
+function setTeam(team) {
+  state.team = team;
+  document.getElementById('btnJV').classList.toggle('active', team === 'JV');
+  document.getElementById('btnVarsity').classList.toggle('active', team === 'Varsity');
+  saveState();
+  renderCurrentPage();
+}
+
+// ==================== HELPERS ====================
+function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2,5); }
+
+function fmtDate(d) {
+  if (!d) return '';
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function today() { return new Date().toISOString().split('T')[0]; }
+
+function teamMembers() {
+  return state.members.filter(m => m.team === state.team || m.team === 'Both');
+}
+
+function getMemberById(id) { return state.members.find(m => m.id === id); }
+
+function getEventById(id) { return EVENTS_DATA.find(e => e.id === id); }
+
+function getAssignments(eventId) {
+  const a = state.assignments[eventId] || [];
+  return a.filter(mid => { const m = getMemberById(mid); return m && (m.team === state.team || m.team === 'Both'); });
+}
+
+function getMemberHours(memberId) {
+  return state.practiceLogs.filter(l => l.memberId === memberId).reduce((s, l) => s + (parseFloat(l.hours) || 0), 0);
+}
+
+function getMemberEvents(memberId) {
+  return EVENTS_DATA.filter(e => (state.assignments[e.id] || []).includes(memberId)).length;
+}
+
+function getEventHours(eventId) {
+  return state.practiceLogs.filter(l => l.eventId === eventId).reduce((s, l) => s + (parseFloat(l.hours) || 0), 0);
+}
+
+function avatarColor(name) {
+  const colors = ['#1e7a34','#c9a227','#38bdf8','#a78bfa','#f472b6','#fb923c','#34d058','#e05252'];
+  let h = 0; for (let c of name) h = ((h << 5) - h) + c.charCodeAt(0);
+  return colors[Math.abs(h) % colors.length];
+}
+
+function avatarHtml(member, cls = 'avatar') {
+  if (member && member.photo) return `<div class="${cls}"><img src="${member.photo}" alt="${member.firstName}"></div>`;
+  const initials = member ? (member.firstName[0] + (member.lastName[0] || '')).toUpperCase() : '?';
+  const color = member ? avatarColor(member.firstName + member.lastName) : '#1e7a34';
+  return `<div class="${cls}" style="background:${color}20;color:${color};border:2px solid ${color}40">${initials}</div>`;
+}
+
+function roleBadge(role) {
+  const map = { Captain:'badge-gold', 'Co-Captain':'badge-yellow', Member:'badge-green', Alternate:'badge-gray' };
+  return `<span class="badge ${map[role]||'badge-gray'}">${role||'Member'}</span>`;
+}
+
+function coverageBadge(count) {
+  if (count === 0) return `<span class="badge badge-red">0 Members</span>`;
+  if (count === 1) return `<span class="badge badge-yellow">1 Member</span>`;
+  return `<span class="badge badge-green">${count} Members</span>`;
+}
+
+function categoryBadge(cat) {
+  const map = { 'Life Science':'badge-green', 'Earth Science':'badge-blue', 'Physical Science':'badge-purple', 'Technology':'badge-gold', 'Inquiry':'badge-yellow' };
+  return `<span class="badge ${map[cat]||'badge-gray'}">${cat}</span>`;
+}
+
+function typeBadge(type) {
+  const map = { Test:'badge-blue', Build:'badge-gold', Hybrid:'badge-purple' };
+  return `<span class="badge ${map[type]||'badge-gray'}">${type}</span>`;
+}
+
+function starsHtml(eventId, current) {
+  let h = '';
+  for (let i = 1; i <= 5; i++) h += `<span class="star ${i <= (current||0) ? 'filled' : ''}" onclick="setRating('${eventId}',${i})">&#9733;</span>`;
+  return `<div class="stars">${h}</div>`;
+}
+
+function setRating(eventId, rating) {
+  state.eventRatings[eventId] = rating;
+  saveState();
+  renderCurrentPage();
+}
+
+function toast(msg, type = 'success') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  const icons = { success: '&#10003;', error: '&#10007;', warning: '&#9888;' };
+  t.innerHTML = `<span>${icons[type]||''}</span><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { if (t.parentNode) t.parentNode.removeChild(t); }, 3500);
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+
+// ==================== DASHBOARD ====================
+function renderDashboard(content) {
+  const members = teamMembers();
+  const totalHours = members.reduce((s, m) => s + getMemberHours(m.id), 0);
+  const coveredEvents = EVENTS_DATA.filter(e => getAssignments(e.id).length > 0).length;
+  const tournaments = state.tournaments.filter(t => t.team === state.team || t.team === 'Both');
+
+  // Countdown to SC State Tournament Feb 28, 2026
+  const stateDate = new Date('2026-02-28T08:00:00');
+  const now = new Date();
+  const diff = stateDate - now;
+  let countdownHtml = '';
+  if (diff > 0) {
+    const days = Math.floor(diff / (1000*60*60*24));
+    const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+    const mins = Math.floor((diff % (1000*60*60)) / (1000*60));
+    countdownHtml = `
+      <div class="countdown-blocks">
+        <div class="countdown-block"><div class="countdown-num">${days}</div><div class="countdown-unit">Days</div></div>
+        <div class="countdown-block"><div class="countdown-num">${hours}</div><div class="countdown-unit">Hours</div></div>
+        <div class="countdown-block"><div class="countdown-num">${mins}</div><div class="countdown-unit">Mins</div></div>
+      </div>`;
+  } else { countdownHtml = `<div style="color:var(--gold);font-size:18px;font-weight:700;">Tournament Day! Good luck!</div>`; }
+
+  // Recent activity
+  const recentLogs = [...state.practiceLogs]
+    .filter(l => { const m = getMemberById(l.memberId); return m && (m.team === state.team || m.team === 'Both'); })
+    .sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+
+  const activityHtml = recentLogs.length > 0 ? recentLogs.map(l => {
+    const m = getMemberById(l.memberId); const e = getEventById(l.eventId);
+    return `<div class="activity-item">
+      <div class="activity-dot"></div>
+      <div><div class="activity-text">${m ? m.firstName+' '+m.lastName : 'Unknown'} logged <strong>${l.hours}h</strong> for <strong>${e ? e.name : 'Unknown Event'}</strong></div>
+      <div class="activity-time">${fmtDate(l.date)} &bull; ${l.sessionType || 'Study'} ${l.notes ? '&bull; ' + escHtml(l.notes.substring(0,40)) : ''}</div></div>
+    </div>`;
+  }).join('') : `<div class="empty-state" style="padding:30px 0"><div class="empty-state-icon">&#128221;</div><p>No activity yet. Log practice sessions to see them here.</p></div>`;
+
+  // Event coverage grid
+  const coverageHtml = EVENTS_DATA.map(e => {
+    const count = getAssignments(e.id).length;
+    const cls = count === 0 ? 'none' : count === 1 ? 'one' : 'full';
+    return `<div class="coverage-item"><div class="coverage-dot ${cls}"></div><span style="line-height:1.3">${e.name}</span></div>`;
+  }).join('');
+
+  // Next tournament
+  const upcoming = state.tournaments.filter(t => new Date(t.date) >= now && (t.team === state.team || t.team === 'Both')).sort((a,b) => new Date(a.date)-new Date(b.date))[0];
+  const nextTournHtml = upcoming ?
+    `<div class="next-tournament-card">
+      <div class="text-xs text-muted" style="margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Next Tournament</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:4px">${escHtml(upcoming.name)}</div>
+      <div class="text-sm text-muted">${fmtDate(upcoming.date)} &bull; ${escHtml(upcoming.location||'TBD')}</div>
+      <div style="margin-top:8px">${typeBadge(upcoming.type)}</div>
+    </div>` :
+    `<div class="next-tournament-card"><div class="text-sm text-muted text-center" style="padding:20px 0">No upcoming tournaments scheduled.<br><a href="#" onclick="navigate('tournaments')" style="color:var(--green-light)">Add one</a></div></div>`;
+
+  content.innerHTML = `
+    <div class="welcome-banner">
+      <img src="https://carolinapreps.com/teams/assets/teams/frontend/logo/Bishop-England-Battling-Bishops.png" alt="BE Logo" onerror="this.style.display='none'">
+      <div class="welcome-text">
+        <h2>Bishop England Battling Bishops</h2>
+        <p>${state.settings.teamName} Science Olympiad &bull; ${state.team} Team &bull; Season ${state.settings.season}</p>
+        ${state.settings.coachName ? `<p style="margin-top:4px;font-size:13px;color:var(--text-dim)">Coach: ${escHtml(state.settings.coachName)}</p>` : ''}
+      </div>
+    </div>
+    <div class="stats-grid" style="margin-bottom:24px">
+      <div class="card stat-card"><div class="stat-value">${members.length}</div><div class="stat-label">Team Members (${state.team})</div></div>
+      <div class="card stat-card"><div class="stat-value">${coveredEvents}</div><div class="stat-label">Events Covered</div></div>
+      <div class="card stat-card"><div class="stat-value">${totalHours.toFixed(1)}</div><div class="stat-label">Total Practice Hours</div></div>
+      <div class="card stat-card"><div class="stat-value">${tournaments.length}</div><div class="stat-label">Tournaments Entered</div></div>
+    </div>
+    <div class="dashboard-grid">
+      <div>
+        <div class="card" style="margin-bottom:20px">
+          <div class="countdown-card">
+            <div class="countdown-label">&#127941; SC State Tournament &bull; Feb 28, 2026 &bull; Presbyterian College, Clinton SC</div>
+            ${countdownHtml}
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:20px">
+          <div class="section-header"><div class="section-title">Event Coverage</div><div class="text-xs text-muted">&#128308; 0 members &nbsp;&#128993; 1 member &nbsp;&#128994; 2+ members</div></div>
+          <div class="coverage-grid">${coverageHtml}</div>
+        </div>
+        <div class="card">
+          <div class="section-header">
+            <div class="section-title">Recent Activity</div>
+            <button class="btn btn-sm btn-secondary" onclick="navigate('practicelog')">View All</button>
+          </div>
+          ${activityHtml}
+        </div>
+      </div>
+      <div>
+        ${nextTournHtml}
+        <div class="card" style="margin-top:16px">
+          <div class="section-title" style="margin-bottom:14px">Quick Actions</div>
+          <div class="quick-actions" style="flex-direction:column">
+            <button class="btn btn-primary w-full" onclick="openAddMember()">&#43; Add Member</button>
+            <button class="btn btn-secondary w-full" onclick="navigate('practicelog')">&#128221; Log Practice</button>
+            <button class="btn btn-secondary w-full" onclick="navigate('assignments')">&#9989; Manage Assignments</button>
+            <button class="btn btn-secondary w-full" onclick="navigate('announcements')">&#128276; Post Announcement</button>
+            <button class="btn btn-secondary w-full" onclick="navigate('tournaments')">&#127942; Log Tournament</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="section-title" style="margin-bottom:14px">Coverage Summary</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;font-size:13px"><span>&#128308; No members</span><span class="text-danger">${EVENTS_DATA.filter(e => getAssignments(e.id).length===0).length} events</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px"><span>&#128993; 1 member</span><span style="color:var(--warning)">${EVENTS_DATA.filter(e => getAssignments(e.id).length===1).length} events</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px"><span>&#128994; Full coverage</span><span class="text-green">${EVENTS_DATA.filter(e => getAssignments(e.id).length>=2).length} events</span></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ==================== ROSTER ====================
+function renderRoster(content) {
+  const members = [...teamMembers()];
+  const sort = sortConfig;
+  members.sort((a, b) => {
+    let av = a[sort.key] || '', bv = b[sort.key] || '';
+    if (sort.key === 'hours') { av = getMemberHours(a.id); bv = getMemberHours(b.id); }
+    if (sort.key === 'grade') { av = parseInt(av)||0; bv = parseInt(bv)||0; }
+    return sort.dir === 'asc' ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
+  });
+
+  const memberCards = members.length > 0 ? members.map(m => {
+    const hours = getMemberHours(m.id);
+    const events = getMemberEvents(m.id);
+    return `<div class="member-card" onclick="openEditMember('${m.id}')">
+      <div class="member-card-header">
+        ${avatarHtml(m)}
+        <div class="member-card-info">
+          <h3>${escHtml(m.firstName)} ${escHtml(m.lastName)}</h3>
+          <p>Grade ${m.grade} &bull; ${m.team}</p>
+          <div style="margin-top:4px">${roleBadge(m.role)}</div>
+        </div>
+      </div>
+      ${m.email ? `<div class="text-sm text-muted" style="margin-bottom:8px">&#9993; ${escHtml(m.email)}</div>` : ''}
+      ${m.notes ? `<div class="text-xs text-dim" style="margin-bottom:8px;line-height:1.4">${escHtml(m.notes.substring(0,80))}${m.notes.length>80?'...':''}</div>` : ''}
+      <div class="member-card-stats">
+        <div class="member-stat"><strong>${events}</strong>Events</div>
+        <div class="member-stat"><strong>${hours.toFixed(1)}h</strong>Practice</div>
+      </div>
+    </div>`;
+  }).join('') : `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">&#128101;</div><h3>No members on ${state.team} team</h3><p>Add members or switch teams using the toggle above.</p></div>`;
+
+  content.innerHTML = `
+    <div class="page-header">
+      <h2>Roster &mdash; ${state.team} Team (${members.length} members)</h2>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-secondary btn-sm" onclick="window.print()">&#128438; Print</button>
+        <button class="btn btn-primary" onclick="openAddMember()">&#43; Add Member</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input class="form-input" placeholder="&#128269; Search members..." oninput="filterRoster(this.value)" id="rosterSearch">
+      <select class="form-select" onchange="sortRoster(this.value)">
+        <option value="name">Sort: Name</option>
+        <option value="grade">Sort: Grade</option>
+        <option value="hours">Sort: Hours</option>
+        <option value="role">Sort: Role</option>
+      </select>
+      <select class="form-select" onchange="filterRosterRole(this.value)">
+        <option value="">All Roles</option>
+        <option>Captain</option><option>Co-Captain</option><option>Member</option><option>Alternate</option>
+      </select>
+    </div>
+    <div class="members-grid" id="membersGrid">${memberCards}</div>`;
+}
+
+function filterRoster(query) {
+  const cards = document.querySelectorAll('.member-card');
+  const q = query.toLowerCase();
+  cards.forEach(c => { c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none'; });
+}
+function sortRoster(key) { sortConfig = { key, dir: sortConfig.key === key && sortConfig.dir === 'asc' ? 'desc' : 'asc' }; renderCurrentPage(); }
+function filterRosterRole(role) {
+  const cards = document.querySelectorAll('.member-card');
+  cards.forEach(c => { c.style.display = !role || c.textContent.includes(role) ? '' : 'none'; });
+}
+
+// ==================== MEMBER MODALS ====================
+function openAddMember() {
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <div class="modal-header"><span class="modal-title">Add Member</span><button class="close-btn" onclick="closeModal()">&times;</button></div>
+        <div class="modal-body">
+          <div class="photo-upload-area">
+            <img id="photoPreview" class="photo-preview" src="" style="display:none" alt="photo">
+            <div id="photoPlaceholder" style="width:64px;height:64px;border-radius:50%;background:var(--bg-surface);border:2px dashed var(--border-light);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--text-dim)">&#128247;</div>
+            <div class="photo-upload-area" style="flex-direction:column;align-items:flex-start;gap:4px">
+              <label class="btn btn-secondary btn-sm">&#128247; Upload Photo<input type="file" accept="image/*" style="display:none" onchange="handlePhotoUpload(this)"></label>
+              <div class="text-xs text-dim">Optional. Stored locally.</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">First Name *</label><input class="form-input" id="addFirstName" placeholder="First name"></div>
+            <div class="form-group"><label class="form-label">Last Name *</label><input class="form-input" id="addLastName" placeholder="Last name"></div>
+          </div>
+          <div class="form-row-3">
+            <div class="form-group"><label class="form-label">Grade</label><select class="form-select" id="addGrade"><option>9</option><option>10</option><option>11</option><option>12</option></select></div>
+            <div class="form-group"><label class="form-label">Role</label><select class="form-select" id="addRole"><option>Member</option><option>Captain</option><option>Co-Captain</option><option>Alternate</option></select></div>
+            <div class="form-group"><label class="form-label">Team</label><select class="form-select" id="addTeam"><option>JV</option><option>Varsity</option><option>Both</option></select></div>
+          </div>
+          <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="addEmail" type="email" placeholder="student@school.edu"></div>
+          <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="addNotes" placeholder="Any notes about this member..."></textarea></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveMember()">Add Member</button>
+        </div>
+      </div>
+    </div>`;
+  window._photoData = null;
+  document.getElementById('addTeam').value = state.team;
+}
+
+function openEditMember(id) {
+  const m = getMemberById(id);
+  if (!m) return;
+  const events = EVENTS_DATA.filter(e => (state.assignments[e.id]||[]).includes(id));
+  const logs = state.practiceLogs.filter(l => l.memberId === id).sort((a,b) => new Date(b.date)-new Date(a.date));
+  const totalHrs = getMemberHours(id);
+
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal modal-lg">
+        <div class="modal-header"><span class="modal-title">Edit Member</span><button class="close-btn" onclick="closeModal()">&times;</button></div>
+        <div class="modal-body">
+          <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+            <div>
+              <div class="photo-upload-area">
+                ${m.photo ? `<img id="photoPreview" class="photo-preview" src="${m.photo}" alt="photo">` : `<div id="photoPlaceholder" style="width:64px;height:64px;border-radius:50%;background:var(--bg-surface);border:2px dashed var(--border-light);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--text-dim)">&#128247;</div>`}
+                <label class="btn btn-secondary btn-sm">&#128247; Change Photo<input type="file" accept="image/*" style="display:none" onchange="handlePhotoUpload(this)"></label>
+              </div>
+            </div>
+            <div style="flex:1;min-width:200px">
+              <div style="font-size:12px;color:var(--text-dim);margin-bottom:10px">Total Hours: <strong style="color:var(--green-bright)">${totalHrs.toFixed(1)}h</strong> &bull; Events: <strong style="color:var(--green-bright)">${events.length}</strong></div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">${events.map(e => `<span class="badge badge-green">${e.name}</span>`).join('') || '<span class="text-dim text-xs">No events assigned</span>'}</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">First Name *</label><input class="form-input" id="editFirstName" value="${escHtml(m.firstName)}"></div>
+            <div class="form-group"><label class="form-label">Last Name *</label><input class="form-input" id="editLastName" value="${escHtml(m.lastName)}"></div>
+          </div>
+          <div class="form-row-3">
+            <div class="form-group"><label class="form-label">Grade</label><select class="form-select" id="editGrade"><option ${m.grade=='9'?'selected':''}>9</option><option ${m.grade=='10'?'selected':''}>10</option><option ${m.grade=='11'?'selected':''}>11</option><option ${m.grade=='12'?'selected':''}>12</option></select></div>
+            <div class="form-group"><label class="form-label">Role</label><select class="form-select" id="editRole"><option ${m.role==='Member'?'selected':''}>Member</option><option ${m.role==='Captain'?'selected':''}>Captain</option><option ${m.role==='Co-Captain'?'selected':''}>Co-Captain</option><option ${m.role==='Alternate'?'selected':''}>Alternate</option></select></div>
+            <div class="form-group"><label class="form-label">Team</label><select class="form-select" id="editTeam"><option ${m.team==='JV'?'selected':''}>JV</option><option ${m.team==='Varsity'?'selected':''}>Varsity</option><option ${m.team==='Both'?'selected':''}>Both</option></select></div>
+          </div>
+          <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="editEmail" value="${escHtml(m.email||'')}" type="email"></div>
+          <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="editNotes">${escHtml(m.notes||'')}</textarea></div>
+          ${logs.length > 0 ? `<div><div class="section-title" style="margin-bottom:8px;font-size:13px">Recent Practice Logs</div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Event</th><th>Hours</th><th>Type</th></tr></thead><tbody>${logs.slice(0,5).map(l => { const ev = getEventById(l.eventId); return `<tr><td>${fmtDate(l.date)}</td><td>${ev?ev.name:'?'}</td><td>${l.hours}h</td><td>${l.sessionType||'Study'}</td></tr>`; }).join('')}</tbody></table></div></div>` : ''}
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-danger btn-sm" onclick="deleteMember('${id}')">Delete</button>
+          <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="updateMember('${id}')">Save Changes</button>
+        </div>
+      </div>
+    </div>`;
+  window._photoData = m.photo || null;
+}
+
+function handlePhotoUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    window._photoData = e.target.result;
+    const preview = document.getElementById('photoPreview');
+    const placeholder = document.getElementById('photoPlaceholder');
+    if (preview) { preview.src = e.target.result; preview.style.display = ''; }
+    if (placeholder) placeholder.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveMember() {
+  const fn = document.getElementById('addFirstName').value.trim();
+  const ln = document.getElementById('addLastName').value.trim();
+  if (!fn || !ln) { toast('First and last name required', 'error'); return; }
+  const member = {
+    id: uid(), firstName: fn, lastName: ln,
+    grade: document.getElementById('addGrade').value,
+    role: document.getElementById('addRole').value,
+    team: document.getElementById('addTeam').value,
+    email: document.getElementById('addEmail').value.trim(),
+    notes: document.getElementById('addNotes').value.trim(),
+    photo: window._photoData || null,
+    createdAt: today()
+  };
+  state.members.push(member);
+  saveState();
+  closeModal();
+  renderCurrentPage();
+  toast(`${fn} ${ln} added to ${member.team} team`, 'success');
+}
+
+function updateMember(id) {
+  const idx = state.members.findIndex(m => m.id === id);
+  if (idx === -1) return;
+  const fn = document.getElementById('editFirstName').value.trim();
+  const ln = document.getElementById('editLastName').value.trim();
+  if (!fn || !ln) { toast('Name required', 'error'); return; }
+  state.members[idx] = { ...state.members[idx], firstName: fn, lastName: ln,
+    grade: document.getElementById('editGrade').value, role: document.getElementById('editRole').value,
+    team: document.getElementById('editTeam').value, email: document.getElementById('editEmail').value.trim(),
+    notes: document.getElementById('editNotes').value.trim(), photo: window._photoData !== undefined ? window._photoData : state.members[idx].photo };
+  saveState(); closeModal(); renderCurrentPage();
+  toast('Member updated', 'success');
+}
+
+function deleteMember(id) {
+  if (!confirm('Delete this member? This cannot be undone.')) return;
+  state.members = state.members.filter(m => m.id !== id);
+  Object.keys(state.assignments).forEach(eid => { state.assignments[eid] = (state.assignments[eid]||[]).filter(mid => mid !== id); });
+  state.practiceLogs = state.practiceLogs.filter(l => l.memberId !== id);
+  saveState(); closeModal(); renderCurrentPage();
+  toast('Member deleted', 'success');
+}
+
+function closeModal() { document.getElementById('modalRoot').innerHTML = ''; }
+
+// ==================== EVENTS ====================
+function renderEvents(content) {
+  const filterSearch = document.getElementById('evtSearch')?.value || '';
+  const filterCat = document.getElementById('evtCat')?.value || '';
+  const filterType = document.getElementById('evtType')?.value || '';
+  const filterCov = document.getElementById('evtCov')?.value || '';
+
+  let events = EVENTS_DATA;
+  if (filterSearch) events = events.filter(e => e.name.toLowerCase().includes(filterSearch.toLowerCase()));
+  if (filterCat) events = events.filter(e => e.category === filterCat);
+  if (filterType) events = events.filter(e => e.type === filterType);
+  if (filterCov === '0') events = events.filter(e => getAssignments(e.id).length === 0);
+  if (filterCov === '1') events = events.filter(e => getAssignments(e.id).length === 1);
+  if (filterCov === '2') events = events.filter(e => getAssignments(e.id).length >= 2);
+
+  const eventCards = events.map(e => {
+    const assigned = getAssignments(e.id).map(mid => getMemberById(mid)).filter(Boolean);
+    const hours = getEventHours(e.id);
+    const rating = state.eventRatings[e.id] || 0;
+    const avatars = assigned.map(m => avatarHtml(m, 'avatar avatar-sm')).join('');
+    return `<div class="event-card" onclick="openEventDetail('${e.id}')">
+      <div class="event-card-header">
+        <div class="event-name">${e.name}</div>
+        <div style="flex-shrink:0">${coverageBadge(assigned.length)}</div>
+      </div>
+      <div class="event-card-meta">${categoryBadge(e.category)}${typeBadge(e.type)}</div>
+      <div class="text-xs text-muted" style="margin-bottom:8px;line-height:1.4">${e.description.substring(0,100)}...</div>
+      <div class="event-card-footer">
+        <div class="event-members-row">${avatars || '<span class="text-xs text-dim">No members</span>'}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <div class="text-xs text-muted">${hours.toFixed(1)}h logged</div>
+          <div class="stars">${Array.from({length:5},(_,i)=>`<span class="star ${i<rating?'filled':''}" onclick="event.stopPropagation();setRating('${e.id}',${i+1})">&#9733;</span>`).join('')}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  content.innerHTML = `
+    <div class="page-header"><h2>Events (${events.length} / ${EVENTS_DATA.length})</h2></div>
+    <div class="filter-bar">
+      <input class="form-input" id="evtSearch" placeholder="&#128269; Search events..." value="${filterSearch}" oninput="renderCurrentPage()">
+      <select class="form-select" id="evtCat" onchange="renderCurrentPage()">
+        <option value="">All Categories</option>
+        <option ${filterCat==='Life Science'?'selected':''}>Life Science</option>
+        <option ${filterCat==='Earth Science'?'selected':''}>Earth Science</option>
+        <option ${filterCat==='Physical Science'?'selected':''}>Physical Science</option>
+        <option ${filterCat==='Technology'?'selected':''}>Technology</option>
+        <option ${filterCat==='Inquiry'?'selected':''}>Inquiry</option>
+      </select>
+      <select class="form-select" id="evtType" onchange="renderCurrentPage()">
+        <option value="">All Types</option>
+        <option ${filterType==='Test'?'selected':''}>Test</option>
+        <option ${filterType==='Build'?'selected':''}>Build</option>
+        <option ${filterType==='Hybrid'?'selected':''}>Hybrid</option>
+      </select>
+      <select class="form-select" id="evtCov" onchange="renderCurrentPage()">
+        <option value="">All Coverage</option>
+        <option value="0" ${filterCov==='0'?'selected':''}>No Members</option>
+        <option value="1" ${filterCov==='1'?'selected':''}>1 Member</option>
+        <option value="2" ${filterCov==='2'?'selected':''}>Full (2+)</option>
+      </select>
+    </div>
+    <div class="events-grid">${eventCards || '<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">&#128269;</div><h3>No events match filters</h3></div>'}</div>`;
+}
+
+function openEventDetail(eventId) {
+  const e = getEventById(eventId);
+  if (!e) return;
+  const assigned = getAssignments(eventId).map(mid => getMemberById(mid)).filter(Boolean);
+  const logs = state.practiceLogs.filter(l => l.eventId === eventId).sort((a,b) => new Date(b.date)-new Date(a.date));
+  const totalHrs = logs.reduce((s,l) => s + (parseFloat(l.hours)||0), 0);
+  const rating = state.eventRatings[eventId] || 0;
+
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal modal-xl">
+        <div class="modal-header">
+          <div>
+            <div class="modal-title">${e.name}</div>
+            <div style="display:flex;gap:6px;margin-top:4px">${categoryBadge(e.category)}${typeBadge(e.type)}</div>
+          </div>
+          <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="text-sm text-muted" style="line-height:1.6">${e.description}</p>
+          <div style="display:flex;gap:16px;flex-wrap:wrap">
+            <div style="flex:1;min-width:200px">
+              <div class="section-title" style="margin-bottom:10px">Readiness Rating</div>
+              <div class="stars" style="font-size:22px">
+                ${Array.from({length:5},(_,i) => `<span class="star ${i<rating?'filled':''}" onclick="setRating('${eventId}',${i+1});openEventDetail('${eventId}')" style="font-size:22px">&#9733;</span>`).join('')}
+              </div>
+              <div class="text-xs text-muted" style="margin-top:4px">${rating > 0 ? rating + '/5 readiness' : 'Rate team readiness'}</div>
+            </div>
+            <div style="flex:1;min-width:200px">
+              <div class="section-title" style="margin-bottom:10px">Stats</div>
+              <div class="text-sm"><strong style="color:var(--green-bright)">${totalHrs.toFixed(1)}h</strong> total logged</div>
+              <div class="text-sm" style="margin-top:4px"><strong style="color:var(--green-bright)">${assigned.length}</strong> members assigned</div>
+            </div>
+          </div>
+          <div>
+            <div class="section-title" style="margin-bottom:10px">Assigned Members (${assigned.length}/2)</div>
+            ${assigned.length > 0 ? `<div style="display:flex;gap:10px;flex-wrap:wrap">${assigned.map(m => `<div style="display:flex;align-items:center;gap:8px;background:var(--bg-surface);padding:8px 12px;border-radius:8px;border:1px solid var(--border)">${avatarHtml(m,'avatar avatar-sm')}<div><div style="font-size:13px;font-weight:600">${m.firstName} ${m.lastName}</div><div class="text-xs text-muted">${m.role} &bull; Grade ${m.grade}</div></div></div>`).join('')}</div>` : '<div class="text-sm text-muted">No members assigned. Go to Assignments to assign members.</div>'}
+          </div>
+          <div>
+            <div class="section-title" style="margin-bottom:10px">Study Tips</div>
+            <div>${e.tips.map(t => `<div class="tip-item">${t}</div>`).join('')}</div>
+          </div>
+          <div>
+            <div class="section-title" style="margin-bottom:10px">Resources</div>
+            <div>${e.links.map(l => `<a class="resource-link" href="${l.url}" target="_blank" rel="noopener">&#128279; ${l.text}</a>`).join('')}</div>
+          </div>
+          ${logs.length > 0 ? `<div>
+            <div class="section-title" style="margin-bottom:10px">Practice Log (${logs.length} entries)</div>
+            <div class="table-wrap"><table><thead><tr><th>Date</th><th>Member</th><th>Hours</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+            ${logs.slice(0,10).map(l => { const m = getMemberById(l.memberId); return `<tr><td>${fmtDate(l.date)}</td><td>${m?m.firstName+' '+m.lastName:'?'}</td><td>${l.hours}h</td><td>${l.sessionType||'Study'}</td><td class="text-dim">${escHtml(l.notes||'').substring(0,50)}</td></tr>`; }).join('')}
+            </tbody></table></div></div>` : ''}
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+          <button class="btn btn-primary" onclick="closeModal();navigate('assignments')">Manage Assignments</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+
+// ==================== ASSIGNMENTS ====================
+function renderAssignments(content) {
+  const members = teamMembers();
+
+  const rows = EVENTS_DATA.map(e => {
+    const assigned = getAssignments(e.id).map(mid => getMemberById(mid)).filter(Boolean);
+    const available = members.filter(m => !(state.assignments[e.id]||[]).includes(m.id));
+    return `<tr>
+      <td><strong>${e.name}</strong><br><span class="text-xs text-dim">${e.category}</span></td>
+      <td>${typeBadge(e.type)}</td>
+      <td>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          ${assigned.map(m => `<div style="display:flex;align-items:center;gap:4px;background:var(--bg-surface);padding:3px 8px;border-radius:6px;border:1px solid var(--border)">
+            ${avatarHtml(m,'avatar avatar-sm')}
+            <span style="font-size:12px">${m.firstName} ${m.lastName}</span>
+            <button class="btn btn-xs" style="background:transparent;border:none;color:var(--danger);padding:2px;line-height:1" onclick="removeAssignment('${e.id}','${m.id}')" title="Remove">&#10007;</button>
+          </div>`).join('')}
+          ${assigned.length === 0 ? '<span class="text-xs text-dim">None assigned</span>' : ''}
+        </div>
+      </td>
+      <td>${coverageBadge(assigned.length)}</td>
+      <td>
+        ${assigned.length < 2 && available.length > 0 ?
+          `<select class="form-select" style="height:32px;font-size:12px;padding:4px 8px" onchange="addAssignment('${e.id}',this)">
+            <option value="">+ Assign member</option>
+            ${available.map(m => `<option value="${m.id}">${m.firstName} ${m.lastName}</option>`).join('')}
+          </select>` :
+          assigned.length >= 2 ? '<span class="text-xs text-muted">Max 2 assigned</span>' :
+          '<span class="text-xs text-dim">No available members</span>'}
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Summary stats
+  const noMember = EVENTS_DATA.filter(e => getAssignments(e.id).length === 0).length;
+  const oneMember = EVENTS_DATA.filter(e => getAssignments(e.id).length === 1).length;
+  const twoMember = EVENTS_DATA.filter(e => getAssignments(e.id).length >= 2).length;
+
+  content.innerHTML = `
+    <div class="page-header">
+      <h2>Assignments &mdash; ${state.team} Team</h2>
+      <div style="display:flex;gap:12px">
+        <div class="card" style="padding:10px 16px;display:flex;gap:12px">
+          <span class="text-sm"><span style="color:var(--danger)">&#11044;</span> ${noMember} empty</span>
+          <span class="text-sm"><span style="color:var(--warning)">&#11044;</span> ${oneMember} partial</span>
+          <span class="text-sm"><span style="color:var(--success)">&#11044;</span> ${twoMember} full</span>
+        </div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Event</th><th>Type</th><th>Assigned Members</th><th>Coverage</th><th>Add Member</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function addAssignment(eventId, select) {
+  const memberId = select.value;
+  if (!memberId) return;
+  if (!(state.assignments[eventId])) state.assignments[eventId] = [];
+  if (state.assignments[eventId].length >= 2) { toast('Maximum 2 members per event', 'warning'); select.value = ''; return; }
+  if (state.assignments[eventId].includes(memberId)) { toast('Member already assigned', 'warning'); select.value = ''; return; }
+  state.assignments[eventId].push(memberId);
+  saveState();
+  renderCurrentPage();
+  const m = getMemberById(memberId);
+  const e = getEventById(eventId);
+  toast(`${m ? m.firstName + ' ' + m.lastName : 'Member'} assigned to ${e ? e.name : eventId}`, 'success');
+}
+
+function removeAssignment(eventId, memberId) {
+  if (!state.assignments[eventId]) return;
+  state.assignments[eventId] = state.assignments[eventId].filter(id => id !== memberId);
+  saveState(); renderCurrentPage();
+  const m = getMemberById(memberId); const e = getEventById(eventId);
+  toast(`${m ? m.firstName : 'Member'} removed from ${e ? e.name : eventId}`, 'success');
+}
+
+// ==================== PRACTICE LOG ====================
+function renderPracticeLog(content) {
+  const members = teamMembers();
+  const filterMember = document.getElementById('plMember')?.value || '';
+  const filterEvent = document.getElementById('plEvent')?.value || '';
+  const filterFrom = document.getElementById('plFrom')?.value || '';
+  const filterTo = document.getElementById('plTo')?.value || '';
+  const filterType = document.getElementById('plType')?.value || '';
+
+  let logs = state.practiceLogs.filter(l => {
+    const m = getMemberById(l.memberId);
+    return m && (m.team === state.team || m.team === 'Both');
+  });
+  if (filterMember) logs = logs.filter(l => l.memberId === filterMember);
+  if (filterEvent) logs = logs.filter(l => l.eventId === filterEvent);
+  if (filterFrom) logs = logs.filter(l => l.date >= filterFrom);
+  if (filterTo) logs = logs.filter(l => l.date <= filterTo);
+  if (filterType) logs = logs.filter(l => l.sessionType === filterType);
+  logs = [...logs].sort((a,b) => new Date(b.date)-new Date(a.date));
+
+  // Member hours summary
+  const memberSummary = members.map(m => ({ member: m, hours: getMemberHours(m.id) })).filter(x => x.hours > 0).sort((a,b) => b.hours - a.hours);
+
+  const tableRows = logs.map(l => {
+    const m = getMemberById(l.memberId); const e = getEventById(l.eventId);
+    return `<tr>
+      <td>${fmtDate(l.date)}</td>
+      <td><div style="display:flex;align-items:center;gap:8px">${m ? avatarHtml(m,'avatar avatar-sm') : ''}<span>${m ? m.firstName+' '+m.lastName : 'Unknown'}</span></div></td>
+      <td>${e ? e.name : l.eventId}</td>
+      <td><strong>${parseFloat(l.hours).toFixed(2)}h</strong></td>
+      <td><span class="badge ${l.sessionType==='Build'?'badge-gold':l.sessionType==='Test'?'badge-blue':l.sessionType==='Practice'?'badge-green':'badge-gray'}">${l.sessionType||'Study'}</span></td>
+      <td class="text-dim text-xs">${escHtml(l.notes||'').substring(0,60)}</td>
+      <td><button class="btn btn-xs btn-danger" onclick="deleteLog('${l.id}')">&#128465;</button></td>
+    </tr>`;
+  }).join('');
+
+  content.innerHTML = `
+    <div class="page-header"><h2>Practice Log &mdash; ${state.team} Team</h2></div>
+    <div class="form-row" style="margin-bottom:20px">
+      <div style="grid-column:1/-1">
+        <div class="card">
+          <div class="section-title" style="margin-bottom:14px">Log Practice Session</div>
+          <div class="form-row-3">
+            <div class="form-group"><label class="form-label">Member *</label>
+              <select class="form-select" id="logMember">
+                <option value="">Select member...</option>
+                ${members.map(m => `<option value="${m.id}">${m.firstName} ${m.lastName}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Event *</label>
+              <select class="form-select" id="logEvent">
+                <option value="">Select event...</option>
+                ${EVENTS_DATA.map(e => `<option value="${e.id}">${e.name}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="logDate" value="${today()}"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Hours *</label><input class="form-input" type="number" id="logHours" min="0.25" max="12" step="0.25" placeholder="0.00"></div>
+            <div class="form-group"><label class="form-label">Session Type</label>
+              <select class="form-select" id="logType">
+                <option>Study</option><option>Practice</option><option>Test</option><option>Build</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="logNotes" placeholder="Optional notes about this session..." style="min-height:60px"></textarea></div>
+          <div style="margin-top:12px"><button class="btn btn-primary" onclick="submitLog()">&#43; Log Session</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <select class="form-select" id="plMember" onchange="renderCurrentPage()">
+        <option value="">All Members</option>
+        ${members.map(m => `<option value="${m.id}" ${filterMember===m.id?'selected':''}>${m.firstName} ${m.lastName}</option>`).join('')}
+      </select>
+      <select class="form-select" id="plEvent" onchange="renderCurrentPage()">
+        <option value="">All Events</option>
+        ${EVENTS_DATA.map(e => `<option value="${e.id}" ${filterEvent===e.id?'selected':''}>${e.name}</option>`).join('')}
+      </select>
+      <input class="form-input" type="date" id="plFrom" value="${filterFrom}" onchange="renderCurrentPage()" placeholder="From date">
+      <input class="form-input" type="date" id="plTo" value="${filterTo}" onchange="renderCurrentPage()" placeholder="To date">
+      <select class="form-select" id="plType" onchange="renderCurrentPage()">
+        <option value="">All Types</option>
+        <option ${filterType==='Study'?'selected':''}>Study</option>
+        <option ${filterType==='Practice'?'selected':''}>Practice</option>
+        <option ${filterType==='Test'?'selected':''}>Test</option>
+        <option ${filterType==='Build'?'selected':''}>Build</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start">
+      <div>
+        <div class="section-header"><div class="section-title">Log Entries (${logs.length} total &bull; ${logs.reduce((s,l)=>s+(parseFloat(l.hours)||0),0).toFixed(1)}h)</div></div>
+        ${logs.length > 0 ? `<div class="table-wrap"><table><thead><tr><th onclick="sortLogs('date')">Date &#8597;</th><th onclick="sortLogs('member')">Member &#8597;</th><th onclick="sortLogs('event')">Event &#8597;</th><th>Hours</th><th>Type</th><th>Notes</th><th>Del</th></tr></thead><tbody>${tableRows}</tbody></table></div>` :
+        '<div class="empty-state"><div class="empty-state-icon">&#128221;</div><h3>No logs yet</h3><p>Log your first practice session above.</p></div>'}
+      </div>
+      ${memberSummary.length > 0 ? `<div style="min-width:220px"><div class="card"><div class="section-title" style="margin-bottom:12px">Hours by Member</div>${memberSummary.map(x => `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><div style="display:flex;align-items:center;gap:8px">${avatarHtml(x.member,'avatar avatar-sm')}<span>${x.member.firstName} ${x.member.lastName}</span></div><strong style="color:var(--green-bright)">${x.hours.toFixed(1)}h</strong></div>`).join('')}</div></div>` : ''}
+    </div>`;
+}
+
+function submitLog() {
+  const memberId = document.getElementById('logMember').value;
+  const eventId = document.getElementById('logEvent').value;
+  const hours = parseFloat(document.getElementById('logHours').value);
+  const date = document.getElementById('logDate').value;
+  if (!memberId || !eventId || !hours || !date) { toast('Please fill in member, event, hours, and date', 'error'); return; }
+  if (hours <= 0 || hours > 24) { toast('Hours must be between 0.25 and 24', 'error'); return; }
+  state.practiceLogs.push({
+    id: uid(), memberId, eventId, hours, date,
+    sessionType: document.getElementById('logType').value,
+    notes: document.getElementById('logNotes').value.trim()
+  });
+  saveState(); renderCurrentPage();
+  const m = getMemberById(memberId); const e = getEventById(eventId);
+  toast(`Logged ${hours}h for ${m ? m.firstName : 'member'} on ${e ? e.name : 'event'}`, 'success');
+}
+
+function deleteLog(id) {
+  if (!confirm('Delete this log entry?')) return;
+  state.practiceLogs = state.practiceLogs.filter(l => l.id !== id);
+  saveState(); renderCurrentPage(); toast('Log entry deleted', 'success');
+}
+
+function sortLogs(key) {
+  const logs = [...state.practiceLogs];
+  sortConfig = { key, dir: sortConfig.key === key && sortConfig.dir === 'asc' ? 'desc' : 'asc' };
+  renderCurrentPage();
+}
+
+// ==================== TOURNAMENTS ====================
+function renderTournaments(content) {
+  const tournaments = state.tournaments.filter(t => t.team === state.team || t.team === 'Both').sort((a,b) => new Date(b.date)-new Date(a.date));
+
+  const tournCards = tournaments.map(t => {
+    const placements = t.placements || {};
+    const placedEvents = Object.keys(placements).filter(k => placements[k] && k !== 'overall');
+    return `<div class="tournament-card">
+      <div class="tournament-header">
+        <div>
+          <div class="tournament-name">${escHtml(t.name)}</div>
+          <div class="text-sm text-muted" style="margin-top:4px">${fmtDate(t.date)} &bull; ${escHtml(t.location||'TBD')}</div>
+          <div style="margin-top:6px;display:flex;gap:6px">${typeBadge(t.type)}<span class="badge badge-gray">${t.team}</span></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          ${t.placements && t.placements.overall ? `<div style="text-align:center;background:rgba(201,162,39,0.15);border:1px solid var(--gold);border-radius:10px;padding:10px 16px"><div class="text-xs text-muted">Overall</div><div style="font-size:24px;font-weight:800;color:var(--gold)">${escHtml(t.placements.overall)}</div></div>` : ''}
+          <button class="btn btn-secondary btn-sm" onclick="openEditTournament('${t.id}')">&#9998; Edit</button>
+          <button class="btn btn-xs btn-danger" onclick="deleteTournament('${t.id}')">&#128465;</button>
+        </div>
+      </div>
+      ${placedEvents.length > 0 ? `<div class="placement-grid">${placedEvents.map(eid => { const ev = getEventById(eid); return `<div class="placement-item"><span class="text-xs">${ev ? ev.name : eid}</span><span class="placement-num">${escHtml(placements[eid])}</span></div>`;}).join('')}</div>` : '<div class="text-sm text-dim" style="padding:8px 0">No event placements recorded.</div>'}
+    </div>`;
+  }).join('');
+
+  content.innerHTML = `
+    <div class="page-header">
+      <h2>Tournament Log &mdash; ${state.team} Team</h2>
+      <button class="btn btn-primary" onclick="openAddTournament()">&#43; Add Tournament</button>
+    </div>
+    ${tournaments.length > 0 ? tournCards : `<div class="empty-state"><div class="empty-state-icon">&#127942;</div><h3>No tournaments logged</h3><p>Add your first tournament result.</p></div>`}`;
+}
+
+function openAddTournament() {
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal modal-lg">
+        <div class="modal-header"><span class="modal-title">Add Tournament</span><button class="close-btn" onclick="closeModal()">&times;</button></div>
+        <div class="modal-body">
+          <div class="form-group"><label class="form-label">Tournament Name *</label><input class="form-input" id="tName" placeholder="e.g. Clemson Invitational"></div>
+          <div class="form-row-3">
+            <div class="form-group"><label class="form-label">Date *</label><input class="form-input" type="date" id="tDate" value="${today()}"></div>
+            <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="tType"><option>Invitational</option><option>Regional</option><option>State</option><option>National</option></select></div>
+            <div class="form-group"><label class="form-label">Team</label><select class="form-select" id="tTeam"><option>JV</option><option>Varsity</option><option>Both</option></select></div>
+          </div>
+          <div class="form-group"><label class="form-label">Location</label><input class="form-input" id="tLocation" placeholder="e.g. Clemson University, Clemson SC"></div>
+          <div class="form-group"><label class="form-label">Overall Placement</label><input class="form-input" id="tOverall" placeholder="e.g. 1st, 5th, 12/30"></div>
+          <div class="divider" style="margin:8px 0"></div>
+          <div class="section-title" style="margin-bottom:10px;font-size:13px">Event Placements (optional)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            ${EVENTS_DATA.map(e => `<div style="display:flex;align-items:center;gap:8px;font-size:12px">
+              <label style="flex:1;color:var(--text-muted)">${e.name}</label>
+              <input class="form-input" style="width:80px;padding:5px 8px;font-size:12px" id="tp_${e.id}" placeholder="e.g. 1st">
+            </div>`).join('')}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveTournament()">Save Tournament</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('tTeam').value = state.team;
+}
+
+function openEditTournament(id) {
+  const t = state.tournaments.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal modal-lg">
+        <div class="modal-header"><span class="modal-title">Edit Tournament</span><button class="close-btn" onclick="closeModal()">&times;</button></div>
+        <div class="modal-body">
+          <div class="form-group"><label class="form-label">Tournament Name *</label><input class="form-input" id="tName" value="${escHtml(t.name)}"></div>
+          <div class="form-row-3">
+            <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="tDate" value="${t.date}"></div>
+            <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="tType"><option ${t.type==='Invitational'?'selected':''}>Invitational</option><option ${t.type==='Regional'?'selected':''}>Regional</option><option ${t.type==='State'?'selected':''}>State</option><option ${t.type==='National'?'selected':''}>National</option></select></div>
+            <div class="form-group"><label class="form-label">Team</label><select class="form-select" id="tTeam"><option ${t.team==='JV'?'selected':''}>JV</option><option ${t.team==='Varsity'?'selected':''}>Varsity</option><option ${t.team==='Both'?'selected':''}>Both</option></select></div>
+          </div>
+          <div class="form-group"><label class="form-label">Location</label><input class="form-input" id="tLocation" value="${escHtml(t.location||'')}"></div>
+          <div class="form-group"><label class="form-label">Overall Placement</label><input class="form-input" id="tOverall" value="${escHtml((t.placements&&t.placements.overall)||'')}"></div>
+          <div class="divider" style="margin:8px 0"></div>
+          <div class="section-title" style="margin-bottom:10px;font-size:13px">Event Placements</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            ${EVENTS_DATA.map(e => `<div style="display:flex;align-items:center;gap:8px;font-size:12px">
+              <label style="flex:1;color:var(--text-muted)">${e.name}</label>
+              <input class="form-input" style="width:80px;padding:5px 8px;font-size:12px" id="tp_${e.id}" value="${escHtml((t.placements&&t.placements[e.id])||'')}" placeholder="e.g. 1st">
+            </div>`).join('')}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-danger btn-sm" onclick="deleteTournament('${id}')">Delete</button>
+          <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="updateTournament('${id}')">Save Changes</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function saveTournament() {
+  const name = document.getElementById('tName').value.trim();
+  if (!name) { toast('Tournament name required', 'error'); return; }
+  const placements = { overall: document.getElementById('tOverall').value.trim() };
+  EVENTS_DATA.forEach(e => { const v = document.getElementById('tp_' + e.id)?.value.trim(); if (v) placements[e.id] = v; });
+  state.tournaments.push({ id: uid(), name, date: document.getElementById('tDate').value, type: document.getElementById('tType').value, location: document.getElementById('tLocation').value.trim(), team: document.getElementById('tTeam').value, placements });
+  saveState(); closeModal(); renderCurrentPage();
+  toast('Tournament added', 'success');
+}
+
+function updateTournament(id) {
+  const idx = state.tournaments.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  const name = document.getElementById('tName').value.trim();
+  if (!name) { toast('Tournament name required', 'error'); return; }
+  const placements = { overall: document.getElementById('tOverall').value.trim() };
+  EVENTS_DATA.forEach(e => { const v = document.getElementById('tp_' + e.id)?.value.trim(); if (v) placements[e.id] = v; });
+  state.tournaments[idx] = { ...state.tournaments[idx], name, date: document.getElementById('tDate').value, type: document.getElementById('tType').value, location: document.getElementById('tLocation').value.trim(), team: document.getElementById('tTeam').value, placements };
+  saveState(); closeModal(); renderCurrentPage();
+  toast('Tournament updated', 'success');
+}
+
+function deleteTournament(id) {
+  if (!confirm('Delete this tournament?')) return;
+  state.tournaments = state.tournaments.filter(t => t.id !== id);
+  saveState(); closeModal(); renderCurrentPage();
+  toast('Tournament deleted', 'success');
+}
+
+
+// ==================== ANNOUNCEMENTS ====================
+function renderAnnouncements(content) {
+  const sorted = [...state.announcements].sort((a,b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    const prio = { high: 3, medium: 2, low: 1 };
+    if ((prio[a.priority]||1) !== (prio[b.priority]||1)) return (prio[b.priority]||1) - (prio[a.priority]||1);
+    return new Date(b.date) - new Date(a.date);
+  });
+
+  const cards = sorted.map(a => `<div class="announcement-card ${a.pinned ? 'pinned' : (a.priority||'low')}">
+    <div class="announcement-header">
+      <div>
+        ${a.pinned ? '<span class="badge badge-gold" style="margin-right:8px">&#128204; Pinned</span>' : ''}
+        <span class="badge ${a.priority==='high'?'badge-red':a.priority==='medium'?'badge-yellow':'badge-blue'}">${a.priority||'low'}</span>
+        <span class="announcement-title" style="margin-left:8px">${escHtml(a.title)}</span>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-xs btn-secondary" onclick="togglePin('${a.id}')">${a.pinned ? 'Unpin' : '&#128204; Pin'}</button>
+        <button class="btn btn-xs btn-secondary" onclick="openEditAnnouncement('${a.id}')">&#9998;</button>
+        <button class="btn btn-xs btn-danger" onclick="deleteAnnouncement('${a.id}')">&#128465;</button>
+      </div>
+    </div>
+    <div class="announcement-body">${escHtml(a.body)}</div>
+    <div class="announcement-meta">Posted: ${fmtDate(a.date)} ${a.updatedAt ? '&bull; Updated: ' + fmtDate(a.updatedAt) : ''}</div>
+  </div>`).join('');
+
+  content.innerHTML = `
+    <div class="page-header">
+      <h2>Announcements</h2>
+      <button class="btn btn-primary" onclick="openAddAnnouncement()">&#43; Post Announcement</button>
+    </div>
+    ${sorted.length > 0 ? cards : `<div class="empty-state"><div class="empty-state-icon">&#128276;</div><h3>No announcements yet</h3><p>Post your first announcement above.</p></div>`}`;
+}
+
+function openAddAnnouncement() {
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <div class="modal-header"><span class="modal-title">Post Announcement</span><button class="close-btn" onclick="closeModal()">&times;</button></div>
+        <div class="modal-body">
+          <div class="form-group"><label class="form-label">Title *</label><input class="form-input" id="aTitle" placeholder="Announcement title..."></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Priority</label><select class="form-select" id="aPriority"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
+            <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="aDate" value="${today()}"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Body *</label><textarea class="form-textarea" id="aBody" placeholder="Write your announcement here..." style="min-height:120px"></textarea></div>
+          <div class="form-group" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="aPinned" style="width:18px;height:18px;accent-color:var(--gold)"><label class="form-label" for="aPinned" style="cursor:pointer;margin:0">Pin to top</label></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveAnnouncement()">Post</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function openEditAnnouncement(id) {
+  const a = state.announcements.find(x => x.id === id);
+  if (!a) return;
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <div class="modal-header"><span class="modal-title">Edit Announcement</span><button class="close-btn" onclick="closeModal()">&times;</button></div>
+        <div class="modal-body">
+          <div class="form-group"><label class="form-label">Title *</label><input class="form-input" id="aTitle" value="${escHtml(a.title)}"></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Priority</label><select class="form-select" id="aPriority"><option value="low" ${a.priority==='low'?'selected':''}>Low</option><option value="medium" ${a.priority==='medium'?'selected':''}>Medium</option><option value="high" ${a.priority==='high'?'selected':''}>High</option></select></div>
+            <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="aDate" value="${a.date}"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Body *</label><textarea class="form-textarea" id="aBody" style="min-height:120px">${escHtml(a.body)}</textarea></div>
+          <div class="form-group" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="aPinned" ${a.pinned?'checked':''} style="width:18px;height:18px;accent-color:var(--gold)"><label class="form-label" for="aPinned" style="cursor:pointer;margin:0">Pin to top</label></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="updateAnnouncement('${id}')">Save Changes</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function saveAnnouncement() {
+  const title = document.getElementById('aTitle').value.trim();
+  const body = document.getElementById('aBody').value.trim();
+  if (!title || !body) { toast('Title and body required', 'error'); return; }
+  state.announcements.push({ id: uid(), title, body, priority: document.getElementById('aPriority').value, date: document.getElementById('aDate').value, pinned: document.getElementById('aPinned').checked });
+  saveState(); closeModal(); renderCurrentPage();
+  toast('Announcement posted', 'success');
+}
+
+function updateAnnouncement(id) {
+  const idx = state.announcements.findIndex(a => a.id === id);
+  if (idx === -1) return;
+  const title = document.getElementById('aTitle').value.trim();
+  const body = document.getElementById('aBody').value.trim();
+  if (!title || !body) { toast('Title and body required', 'error'); return; }
+  state.announcements[idx] = { ...state.announcements[idx], title, body, priority: document.getElementById('aPriority').value, date: document.getElementById('aDate').value, pinned: document.getElementById('aPinned').checked, updatedAt: today() };
+  saveState(); closeModal(); renderCurrentPage();
+  toast('Announcement updated', 'success');
+}
+
+function togglePin(id) {
+  const a = state.announcements.find(x => x.id === id);
+  if (a) { a.pinned = !a.pinned; saveState(); renderCurrentPage(); }
+}
+
+function deleteAnnouncement(id) {
+  if (!confirm('Delete this announcement?')) return;
+  state.announcements = state.announcements.filter(a => a.id !== id);
+  saveState(); renderCurrentPage(); toast('Announcement deleted', 'success');
+}
+
+// ==================== RESOURCES ====================
+function renderResources(content) {
+  const accordionItems = EVENTS_DATA.map(e => `
+    <div class="accordion-item" id="acc_${e.id}">
+      <div class="accordion-header" onclick="toggleAccordion('${e.id}')">
+        <div style="display:flex;align-items:center;gap:10px">
+          ${categoryBadge(e.category)}${typeBadge(e.type)}
+          <span>${e.name}</span>
+        </div>
+        <span class="accordion-arrow">&#8964;</span>
+      </div>
+      <div class="accordion-body">
+        <p class="text-sm text-muted" style="margin-bottom:12px;line-height:1.6">${e.description}</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex-wrap:wrap">
+          <div>
+            <div class="section-title" style="font-size:13px;margin-bottom:8px">&#9997; Study Tips</div>
+            ${e.tips.map(t => `<div class="tip-item">${t}</div>`).join('')}
+          </div>
+          <div>
+            <div class="section-title" style="font-size:13px;margin-bottom:8px">&#128279; Resources</div>
+            ${e.links.map(l => `<a class="resource-link" href="${l.url}" target="_blank" rel="noopener">&#128279; ${l.text}</a>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  content.innerHTML = `
+    <div class="page-header"><h2>Resources</h2></div>
+    <div style="display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start;flex-wrap:wrap">
+      <div>
+        <div class="section-title" style="margin-bottom:12px">All 23 Events &mdash; Tips & Resources</div>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <button class="btn btn-sm btn-secondary" onclick="expandAll()">Expand All</button>
+          <button class="btn btn-sm btn-secondary" onclick="collapseAll()">Collapse All</button>
+        </div>
+        ${accordionItems}
+      </div>
+      <div style="min-width:260px;display:flex;flex-direction:column;gap:14px">
+        <div class="card">
+          <div class="section-title" style="margin-bottom:12px">&#127968; SC-Specific Resources</div>
+          <a class="resource-link" href="https://www.scienceolympiadsc.org/" target="_blank" rel="noopener">&#128279; SC Science Olympiad Official Site</a>
+          <a class="resource-link" href="https://www.scienceolympiadsc.org/results" target="_blank" rel="noopener">&#128279; Past SC State Results</a>
+          <a class="resource-link" href="https://www.scienceolympiadsc.org/tournaments" target="_blank" rel="noopener">&#128279; SC Invitational List</a>
+          <a class="resource-link" href="https://bishopengland.org/" target="_blank" rel="noopener">&#128279; Bishop England High School</a>
+          <a class="resource-link" href="https://carolinapreps.com/" target="_blank" rel="noopener">&#128279; Carolina Preps</a>
+          <a class="resource-link" href="https://www.pc.edu/" target="_blank" rel="noopener">&#128279; Presbyterian College (State Host)</a>
+        </div>
+        <div class="card">
+          <div class="section-title" style="margin-bottom:12px">&#127760; General Science Olympiad</div>
+          <a class="resource-link" href="https://scioly.org/" target="_blank" rel="noopener">&#128279; Scioly.org Main Site</a>
+          <a class="resource-link" href="https://scioly.org/wiki/" target="_blank" rel="noopener">&#128279; Scioly.org Wiki</a>
+          <a class="resource-link" href="https://scioly.org/forums/" target="_blank" rel="noopener">&#128279; Scioly.org Forums</a>
+          <a class="resource-link" href="https://discord.gg/scioly" target="_blank" rel="noopener">&#128279; Science Olympiad Discord</a>
+          <a class="resource-link" href="https://www.soinc.org/" target="_blank" rel="noopener">&#128279; Science Olympiad Inc. (National)</a>
+          <a class="resource-link" href="https://scioly.org/wiki/index.php/Trial_Events" target="_blank" rel="noopener">&#128279; Trial Events Information</a>
+          <a class="resource-link" href="https://www.youtube.com/c/ScienceOlympiadInc" target="_blank" rel="noopener">&#128279; Science Olympiad YouTube</a>
+        </div>
+        <div class="card">
+          <div class="section-title" style="margin-bottom:12px">&#128218; General Study Resources</div>
+          <a class="resource-link" href="https://www.khanacademy.org/" target="_blank" rel="noopener">&#128279; Khan Academy</a>
+          <a class="resource-link" href="https://ocw.mit.edu/" target="_blank" rel="noopener">&#128279; MIT OpenCourseWare</a>
+          <a class="resource-link" href="https://www.physicsclassroom.com/" target="_blank" rel="noopener">&#128279; The Physics Classroom</a>
+          <a class="resource-link" href="https://chem.libretexts.org/" target="_blank" rel="noopener">&#128279; ChemLibreTexts</a>
+          <a class="resource-link" href="https://www.desmos.com/" target="_blank" rel="noopener">&#128279; Desmos Graphing Calculator</a>
+          <a class="resource-link" href="https://phet.colorado.edu/" target="_blank" rel="noopener">&#128279; PhET Simulations</a>
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleAccordion(id) {
+  const item = document.getElementById('acc_' + id);
+  if (item) item.classList.toggle('open');
+}
+function expandAll() { document.querySelectorAll('.accordion-item').forEach(i => i.classList.add('open')); }
+function collapseAll() { document.querySelectorAll('.accordion-item').forEach(i => i.classList.remove('open')); }
+
+// ==================== SETTINGS ====================
+function renderSettings(content) {
+  const s = state.settings;
+  content.innerHTML = `
+    <div class="page-header"><h2>Settings</h2></div>
+    <div style="max-width:700px">
+      <div class="settings-section">
+        <h3>Team Information</h3>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Team Name</label><input class="form-input" id="setTeamName" value="${escHtml(s.teamName||'Bishop England')}" oninput="debouncedSave()"></div>
+          <div class="form-group"><label class="form-label">Coach Name</label><input class="form-input" id="setCoachName" value="${escHtml(s.coachName||'')}" placeholder="Coach name" oninput="debouncedSave()"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Season</label><input class="form-input" id="setSeason" value="${escHtml(s.season||'2025-2026')}" style="max-width:200px" oninput="debouncedSave()"></div>
+        <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveGeneralSettings()">Save Team Info</button></div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Firebase Sync Configuration</h3>
+        <div style="margin-bottom:14px;padding:12px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2);border-radius:8px;font-size:13px;color:var(--info)">
+          &#8505; Configure Firebase to sync data across devices in real-time. Leave blank to use localStorage only.
+          <br>Get credentials from <a href="https://console.firebase.google.com/" target="_blank" rel="noopener" style="color:var(--info)">Firebase Console</a> &rarr; Project Settings &rarr; Web App.
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">API Key</label><input class="form-input" id="fbApiKey" type="password" value="${escHtml(s.firebase?.apiKey||'')}" placeholder="AIza..."></div>
+          <div class="form-group"><label class="form-label">Auth Domain</label><input class="form-input" id="fbAuthDomain" value="${escHtml(s.firebase?.authDomain||'')}" placeholder="your-app.firebaseapp.com"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Project ID</label><input class="form-input" id="fbProjectId" value="${escHtml(s.firebase?.projectId||'')}" placeholder="your-project-id"></div>
+          <div class="form-group"><label class="form-label">Storage Bucket</label><input class="form-input" id="fbStorageBucket" value="${escHtml(s.firebase?.storageBucket||'')}" placeholder="your-app.appspot.com"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Messaging Sender ID</label><input class="form-input" id="fbMessagingSenderId" value="${escHtml(s.firebase?.messagingSenderId||'')}" placeholder="123456789"></div>
+          <div class="form-group"><label class="form-label">App ID</label><input class="form-input" id="fbAppId" value="${escHtml(s.firebase?.appId||'')}" placeholder="1:123..."></div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
+          <button class="btn btn-primary" onclick="saveFirebaseConfig()">&#128257; Save & Connect Firebase</button>
+          <div class="sync-status"><div class="sync-dot" id="syncDot2"></div><span id="syncStatus2">Not configured</span></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Data Management</h3>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <button class="btn btn-secondary" onclick="exportData()">&#128229; Export Data (JSON)</button>
+            <span class="text-sm text-muted">Download all data as a backup JSON file</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <label class="btn btn-secondary">&#128228; Import Data (JSON)<input type="file" accept=".json" style="display:none" onchange="importData(this)"></label>
+            <span class="text-sm text-muted">Restore data from a backup file</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <button class="btn btn-danger" onclick="clearAllData()">&#128465; Clear All Data</button>
+            <span class="text-sm text-muted">Permanently delete all stored data</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>App Info</h3>
+        <div class="text-sm text-muted" style="display:flex;flex-direction:column;gap:6px">
+          <div>Version: 2.0 &bull; Bishop England Science Olympiad Team Manager</div>
+          <div>Members: ${state.members.length} &bull; Practice Logs: ${state.practiceLogs.length} &bull; Tournaments: ${state.tournaments.length}</div>
+          <div>Data stored in localStorage key: <code style="background:var(--bg-surface);padding:2px 6px;border-radius:4px;font-size:11px">${STATE_KEY}</code></div>
+          <div>Storage used: ${(JSON.stringify(state).length/1024).toFixed(1)} KB</div>
+        </div>
+      </div>
+    </div>`;
+
+  // Sync dot in settings
+  const dot2 = document.getElementById('syncDot2');
+  const lbl2 = document.getElementById('syncStatus2');
+  if (dot2 && lbl2) {
+    if (db) { dot2.className = 'sync-dot synced'; lbl2.textContent = 'Firebase connected'; }
+    else if (s.firebase?.apiKey) { dot2.className = 'sync-dot offline'; lbl2.textContent = 'Not connected'; }
+    else { dot2.className = 'sync-dot'; lbl2.textContent = 'Not configured'; }
+  }
+}
+
+function saveGeneralSettings() {
+  state.settings.teamName = document.getElementById('setTeamName').value.trim() || 'Bishop England';
+  state.settings.coachName = document.getElementById('setCoachName').value.trim();
+  state.settings.season = document.getElementById('setSeason').value.trim() || '2025-2026';
+  saveState(); toast('Settings saved', 'success');
+}
+
+function saveFirebaseConfig() {
+  state.settings.firebase = {
+    apiKey: document.getElementById('fbApiKey').value.trim(),
+    authDomain: document.getElementById('fbAuthDomain').value.trim(),
+    projectId: document.getElementById('fbProjectId').value.trim(),
+    storageBucket: document.getElementById('fbStorageBucket').value.trim(),
+    messagingSenderId: document.getElementById('fbMessagingSenderId').value.trim(),
+    appId: document.getElementById('fbAppId').value.trim()
+  };
+  saveState();
+  initFirebase();
+  renderCurrentPage();
+}
+
+function exportData() {
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `be_scioly_backup_${today()}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('Data exported', 'success');
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!confirm('Import this data? This will replace all current data.')) return;
+      state = Object.assign(state, imported);
+      saveState(); renderCurrentPage();
+      toast('Data imported successfully', 'success');
+    } catch(err) { toast('Invalid JSON file', 'error'); }
+  };
+  reader.readAsText(file);
+}
+
+function clearAllData() {
+  if (!confirm('Delete ALL data? This cannot be undone!')) return;
+  if (!confirm('Are you absolutely sure? All members, logs, and tournaments will be lost.')) return;
+  state = { team: state.team, members: [], assignments: {}, practiceLogs: [], tournaments: [], announcements: [], eventRatings: {}, settings: state.settings };
+  saveState(); renderCurrentPage();
+  toast('All data cleared', 'warning');
+}
+
+// ==================== INIT ====================
+function init() {
+  loadState();
+  if (state.team) { document.getElementById('btnJV').classList.toggle('active', state.team === 'JV'); document.getElementById('btnVarsity').classList.toggle('active', state.team === 'Varsity'); }
+  initFirebase();
+  navigate('dashboard');
+
+  // Start countdown updater
+  setInterval(() => {
+    if (currentPage === 'dashboard') renderCurrentPage();
+  }, 60000);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
